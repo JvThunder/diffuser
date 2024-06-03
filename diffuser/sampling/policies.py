@@ -12,20 +12,27 @@ Trajectories = namedtuple('Trajectories', 'actions observations values')
 
 class GuidedPolicy:
 
-    def __init__(self, guide, diffusion_model, normalizer, preprocess_fns, **sample_kwargs):
+    def __init__(self, guide, diffusion_model, normalizer, preprocess_fns, discount=0.99, **sample_kwargs):
         self.guide = guide
         self.diffusion_model = diffusion_model
         self.normalizer = normalizer
         self.action_dim = diffusion_model.action_dim
         self.preprocess_fn = get_policy_preprocess_fn(preprocess_fns)
         self.sample_kwargs = sample_kwargs
+        self.discount = discount
 
     def __call__(self, conditions, batch_size=1, verbose=True):
         conditions = {k: self.preprocess_fn(v) for k, v in conditions.items()}
         conditions = self._format_conditions(conditions, batch_size)
 
+        horizon = self.diffusion_model.horizon
+        cond_reward = (1 -self.discount ** horizon) / (1 - self.discount)
+        # cond_reward = 0
+        cond_reward = torch.tensor(cond_reward, device=self.device, dtype=torch.float32)
+        cond_reward = cond_reward.view(-1, 1)
+
         ## run reverse diffusion process
-        samples = self.diffusion_model(conditions, guide=self.guide, verbose=verbose, **self.sample_kwargs)
+        samples = self.diffusion_model(conditions, cond_reward, guide=None, verbose=verbose, **self.sample_kwargs)
         trajectories = utils.to_np(samples.trajectories)
 
         ## extract action [ batch_size x horizon x transition_dim ]

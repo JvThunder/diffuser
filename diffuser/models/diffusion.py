@@ -168,7 +168,7 @@ class GaussianDiffusion(nn.Module):
         progress = utils.Progress(self.n_timesteps) if verbose else utils.Silent()
         for i in reversed(range(0, self.n_timesteps)):
             t = make_timesteps(batch_size, i, device)
-            x, values = sample_fn(self, x, cond, cond_reward, t, **sample_kwargs)
+            x, values = sample_fn(self, x, cond, cond_reward, t)
             x = apply_conditioning(x, cond, self.action_dim)
 
             progress.update({'t': i, 'vmin': values.min().item(), 'vmax': values.max().item()})
@@ -233,18 +233,18 @@ class GaussianDiffusion(nn.Module):
 
 
 class ValueDiffusion(GaussianDiffusion):
-
     def p_losses(self, x_start, cond, target, t):
-        noise = torch.randn_like(x_start)
+        pass
+    # def p_losses(self, x_start, cond, target, t):
+    #     noise = torch.randn_like(x_start)
 
-        x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
-        x_noisy = apply_conditioning(x_noisy, cond, self.action_dim)
+    #     x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
+    #     x_noisy = apply_conditioning(x_noisy, cond, self.action_dim)
 
-        pred = self.model(x_noisy, cond, t)
+    #     pred = self.model(x_noisy, cond, t)
 
-        loss, info = self.loss_fn(pred, target)
-        return loss, info
+    #     loss, info = self.loss_fn(pred, target)
+    #     return loss, info
 
-    def forward(self, x, cond, t):
-        return self.model(x, cond, t)
-
+    # def forward(self, x, cond, t):
+    #     return self.model(x, cond, t)

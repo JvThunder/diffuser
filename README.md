@@ -171,7 +171,7 @@ See [locomotion:plans](config/locomotion.py#L110-L149) for the corresponding def
 do not actually change any logic during planning, but simply load a different model using a deferred f-string.
 For example, the following flags:
 ```
----horizon 32 --n_diffusion_steps 20 --discount 0.997
+--- 32 --n_diffusion_steps 20 --discount 0.997
 --value_loadpath 'f:values/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}'
 ```
 will resolve to a value checkpoint path of `values/defaults_H32_T20_d0.997`. It is possible to
