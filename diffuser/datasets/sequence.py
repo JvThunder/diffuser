@@ -10,8 +10,8 @@ from .buffer import ReplayBuffer
 
 
 Batch = namedtuple('Batch', 'trajectories conditions')
+# RewardBatch = namedtuple('RewardBatch', 'trajectories conditions cond_reward')
 ValueBatch = namedtuple('ValueBatch', 'trajectories conditions values')
-
 
 class SequenceDataset(torch.utils.data.Dataset):
 
@@ -90,7 +90,6 @@ class SequenceDataset(torch.utils.data.Dataset):
         batch = Batch(trajectories, conditions)
         return batch
 
-
 class GoalDataset(SequenceDataset):
 
     def get_conditions(self, observations):
@@ -131,6 +130,7 @@ class ValueDataset(SequenceDataset):
     def normalize_value(self, value):
         ## [0, 1]
         normed = (value - self.vmin) / (self.vmax - self.vmin)
+        return normed
         ## [-1, 1]
         normed = normed * 2 - 1
         return normed

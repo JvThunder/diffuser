@@ -33,7 +33,8 @@ base = {
         'renderer': 'utils.MuJoCoRenderer',
 
         ## dataset
-        'loader': 'datasets.SequenceDataset',
+        # 'loader': 'datasets.SequenceDataset',
+        'loader': 'datasets.ValueDataset', #
         'normalizer': 'GaussianNormalizer',
         'preprocess_fns': [],
         'clip_denoised': False,

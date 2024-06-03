@@ -196,6 +196,7 @@ class Trainer(object):
             ## get a single datapoint
             batch = self.dataloader_vis.__next__()
             conditions = to_device(batch.conditions, 'cuda:0')
+            reward_conditions = to_device(batch.values, 'cuda:0')
 
             ## repeat each item in conditions `n_samples` times
             conditions = apply_dict(
@@ -205,7 +206,7 @@ class Trainer(object):
             )
 
             ## [ n_samples x horizon x (action_dim + observation_dim) ]
-            samples = self.ema_model(conditions)
+            samples = self.ema_model(conditions, reward_conditions)
             trajectories = to_np(samples.trajectories)
 
             ## [ n_samples x horizon x observation_dim ]
