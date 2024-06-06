@@ -13,4 +13,4 @@ OR
 python scripts/train_values.py --dataset halfcheetah-medium-expert-v2 --logbase logs
 
 # Evaluate the model
-python scripts/plan_guided.py --dataset halfcheetah-medium-expert-v2 --logbase logs/pretrained
+python scripts/plan_guided.py --dataset halfcheetah-medium-expert-v2 --logbase logs
