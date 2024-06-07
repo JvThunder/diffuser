@@ -52,6 +52,7 @@ class Trainer(object):
         results_folder='./results',
         n_reference=8,
         bucket=None,
+        render=True,
     ):
         super().__init__()
         self.model = diffusion_model
@@ -85,6 +86,8 @@ class Trainer(object):
 
         self.reset_parameters()
         self.step = 0
+
+        self.render = render
 
     def reset_parameters(self):
         self.ema_model.load_state_dict(self.model.state_dict())
@@ -125,11 +128,12 @@ class Trainer(object):
                 infos_str = ' | '.join([f'{key}: {val:8.4f}' for key, val in infos.items()])
                 print(f'{self.step}: {loss:8.4f} | {infos_str} | t: {timer():8.4f}', flush=True)
 
-            if self.step == 0 and self.sample_freq:
-                self.render_reference(self.n_reference)
+            if self.render:
+                if self.step == 0 and self.sample_freq:
+                    self.render_reference(self.n_reference)
 
-            if self.sample_freq and self.step % self.sample_freq == 0:
-                self.render_samples()
+                if self.sample_freq and self.step % self.sample_freq == 0:
+                    self.render_samples()
 
             self.step += 1
 

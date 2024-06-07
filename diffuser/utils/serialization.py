@@ -28,6 +28,8 @@ def get_latest_epoch(loadpath):
 
 def load_config(*loadpath):
     loadpath = os.path.join(*loadpath)
+    print(loadpath)
+    print("-------------------------")
     config = pickle.load(open(loadpath, 'rb'))
     print(f'[ utils/serialization ] Loaded config from {loadpath}')
     print(config)
@@ -58,6 +60,30 @@ def load_diffusion(*loadpath, epoch='latest', device='cuda:0', seed=None):
     trainer.load(epoch)
 
     return DiffusionExperiment(dataset, renderer, model, diffusion, trainer.ema_model, trainer, epoch)
+
+def load_inverse(*loadpath, epoch='latest', device='cuda:0', seed=None):
+    dataset_config = load_config(*loadpath, 'dataset_config.pkl')
+    render_config = load_config(*loadpath, 'render_config.pkl')
+    model_config = load_config(*loadpath, 'model_config.pkl')
+    trainer_config = load_config(*loadpath, 'trainer_config.pkl')
+
+    ## remove absolute path for results loaded from azure
+    ## @TODO : remove results folder from within trainer class
+    trainer_config._dict['results_folder'] = os.path.join(*loadpath)
+
+    dataset = dataset_config(seed=seed)
+    renderer = render_config()
+    model = model_config()
+    trainer = trainer_config(model, dataset, renderer)
+
+    if epoch == 'latest':
+        epoch = get_latest_epoch(loadpath)
+
+    print(f'\n[ utils/serialization ] Loading model epoch: {epoch}\n')
+
+    trainer.load(epoch)
+
+    return DiffusionExperiment(dataset, renderer, model, None, trainer.ema_model, trainer, epoch)
 
 def check_compatibility(experiment_1, experiment_2):
     '''

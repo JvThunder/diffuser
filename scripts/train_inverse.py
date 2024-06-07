@@ -9,7 +9,7 @@ class Parser(utils.Parser):
     dataset: str = 'hopper-medium-expert-v2'
     config: str = 'config.locomotion'
 
-args = Parser().parse_args('diffusion')
+args = Parser().parse_args('inverse')
 
 
 #-----------------------------------------------------------------------------#
@@ -25,8 +25,6 @@ dataset_config = utils.Config(
     preprocess_fns=args.preprocess_fns,
     use_padding=args.use_padding,
     max_path_length=args.max_path_length,
-    normed=True,
-    no_actions=True,
 )
 
 render_config = utils.Config(
@@ -44,32 +42,12 @@ action_dim = dataset.action_dim
 #-----------------------------------------------------------------------------#
 #------------------------------ model & trainer ------------------------------#
 #-----------------------------------------------------------------------------#
-
 model_config = utils.Config(
     args.model,
     savepath=(args.savepath, 'model_config.pkl'),
-    horizon=args.horizon,
-    transition_dim=observation_dim + action_dim,
-    cond_dim=observation_dim,
-    dim_mults=args.dim_mults,
-    attention=args.attention,
-    device=args.device,
-)
-
-diffusion_config = utils.Config(
-    args.diffusion,
-    savepath=(args.savepath, 'diffusion_config.pkl'),
-    horizon=args.horizon,
-    observation_dim=observation_dim,
-    action_dim=action_dim,
-    n_timesteps=args.n_diffusion_steps,
-    loss_type=args.loss_type,
-    clip_denoised=args.clip_denoised,
-    predict_epsilon=args.predict_epsilon,
-    ## loss weighting
-    action_weight=args.action_weight,
-    loss_weights=args.loss_weights,
-    loss_discount=args.loss_discount,
+    input_dim=2*observation_dim,
+    output_dim=action_dim,
+    hidden_dim=args.hidden_dim,
     device=args.device,
 )
 
@@ -87,39 +65,36 @@ trainer_config = utils.Config(
     results_folder=args.savepath,
     bucket=args.bucket,
     n_reference=args.n_reference,
+    render=False, # we don't need to render in this script
 )
 
 #-----------------------------------------------------------------------------#
 #-------------------------------- instantiate --------------------------------#
 #-----------------------------------------------------------------------------#
 
-model = model_config()
-
-diffusion = diffusion_config(model)
-
-trainer = trainer_config(diffusion, dataset, renderer)
-
+inv_model = model_config()
+trainer = trainer_config(inv_model, dataset, renderer)
 
 #-----------------------------------------------------------------------------#
 #------------------------ test forward & backward pass -----------------------#
 #-----------------------------------------------------------------------------#
 
-utils.report_parameters(model)
-
 print('Testing forward...', end=' ', flush=True)
-batch = utils.batchify(dataset[0])
-print(batch.trajectories.shape)
-loss, _ = diffusion.loss(*batch)
-loss.backward()
+batch1 = utils.batchify(dataset[0])
+batch2 = utils.batchify(dataset[1])
+print(batch1.observations)
+print(batch2.observations)
+print(batch1.observations.shape)
+print(batch1.actions.shape)
 print('✓')
+
 
 #-----------------------------------------------------------------------------#
 #--------------------------------- main loop ---------------------------------#
 #-----------------------------------------------------------------------------#
 
-n_epochs = int(args.n_train_steps // args.n_steps_per_epoch) + 1
+n_epochs = int(args.n_train_steps // args.n_steps_per_epoch)
 
 for i in range(n_epochs):
     print(f'Epoch {i} / {n_epochs} | {args.savepath}')
     trainer.train(n_train_steps=args.n_steps_per_epoch)
-

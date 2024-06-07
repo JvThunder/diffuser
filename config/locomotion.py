@@ -50,7 +50,7 @@ base = {
         ## training
         'n_steps_per_epoch': 10000,
         'loss_type': 'l2',
-        'n_train_steps': 1e6,
+        'n_train_steps': 2e5,
         'batch_size': 32,
         'learning_rate': 2e-4,
         'gradient_accumulate_every': 2,
@@ -65,41 +65,38 @@ base = {
         'seed': None,
     },
 
-    'values': {
-        'model': 'models.ValueFunction',
-        'diffusion': 'models.ValueDiffusion',
-        'horizon': 32,
-        'n_diffusion_steps': 20,
-        'dim_mults': (1, 2, 4, 8),
+    'inverse': {
         'renderer': 'utils.MuJoCoRenderer',
-
-        ## value-specific kwargs
-        'discount': 0.99,
-        'termination_penalty': -100,
-        'normed': False,
+        'horizon': 1,
 
         ## dataset
-        'loader': 'datasets.ValueDataset',
+        'loader': 'datasets.InverseDataset',
         'normalizer': 'GaussianNormalizer',
         'preprocess_fns': [],
+        'clip_denoised': False,
         'use_padding': True,
         'max_path_length': 1000,
 
         ## serialization
         'logbase': logbase,
-        'prefix': 'values/defaults',
+        'prefix': 'inverse/',
         'exp_name': watch(args_to_watch),
+
+        ## model
+        'model': 'models.InverseModel',
+        'hidden_dim': 64,
+        'device': 'cuda',
 
         ## training
         'n_steps_per_epoch': 10000,
-        'loss_type': 'value_l2',
-        'n_train_steps': 200e3,
+        'loss_type': 'l2',
+        'n_train_steps': 2e5,
         'batch_size': 32,
         'learning_rate': 2e-4,
         'gradient_accumulate_every': 2,
         'ema_decay': 0.995,
-        'save_freq': 1000,
-        'sample_freq': 0,
+        'save_freq': 20000,
+        'sample_freq': 20000,
         'n_saves': 5,
         'save_parallel': False,
         'n_reference': 8,
@@ -109,8 +106,7 @@ base = {
     },
 
     'plan': {
-        'guide': 'sampling.ValueGuide',
-        'policy': 'sampling.GuidedPolicy',
+        'policy': 'sampling.InversePolicy',
         'max_episode_length': 1000,
         'batch_size': 64,
         'preprocess_fns': [],
@@ -139,11 +135,11 @@ base = {
         'discount': 0.99,
 
         ## loading
-        'diffusion_loadpath': 'f:diffusion/defaults_H{horizon}_T{n_diffusion_steps}',
-        'value_loadpath': 'f:values/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
+        'diffusion_loadpath': 'f:diffusion/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
+        'inverse_loadpath': 'f:inverse/H1',
 
         'diffusion_epoch': 'latest',
-        'value_epoch': 'latest',
+        'inverse_epoch': 'latest',
 
         'verbose': True,
         'suffix': '0',

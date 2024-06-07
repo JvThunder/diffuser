@@ -10,14 +10,15 @@ from .buffer import ReplayBuffer
 
 
 Batch = namedtuple('Batch', 'trajectories conditions')
-# RewardBatch = namedtuple('RewardBatch', 'trajectories conditions cond_reward')
 ValueBatch = namedtuple('ValueBatch', 'trajectories conditions values')
+InverseBatch = namedtuple('InverseBatch', 'observations actions')
 
 class SequenceDataset(torch.utils.data.Dataset):
 
     def __init__(self, env='hopper-medium-replay', horizon=64,
         normalizer='LimitsNormalizer', preprocess_fns=[], max_path_length=1000,
-        max_n_episodes=10000, termination_penalty=0, use_padding=True, seed=None):
+        max_n_episodes=10000, termination_penalty=0, use_padding=True, seed=None,
+        no_actions=False):
         self.preprocess_fn = get_preprocess_fn(preprocess_fns, env)
         self.env = env = load_environment(env)
         self.env.seed(seed)
@@ -35,7 +36,12 @@ class SequenceDataset(torch.utils.data.Dataset):
         self.indices = self.make_indices(fields.path_lengths, horizon)
 
         self.observation_dim = fields.observations.shape[-1]
-        self.action_dim = fields.actions.shape[-1]
+
+        if no_actions:
+            self.action_dim = 0
+        else:
+            self.action_dim = fields.actions.shape[-1]
+            
         self.fields = fields
         self.n_episodes = fields.n_episodes
         self.path_lengths = fields.path_lengths
@@ -86,8 +92,23 @@ class SequenceDataset(torch.utils.data.Dataset):
         actions = self.fields.normed_actions[path_ind, start:end]
 
         conditions = self.get_conditions(observations)
-        trajectories = np.concatenate([actions, observations], axis=-1)
+        trajectories = np.concatenate([observations], axis=-1)
         batch = Batch(trajectories, conditions)
+        return batch
+
+class InverseDataset(SequenceDataset):
+    def __len__(self):
+        return len(self.indices)-1
+
+    def __getitem__(self, idx, eps=1e-4):
+        path_ind, start, end = self.indices[idx]
+
+        observations = self.fields.normed_observations[path_ind, start:end]
+        next_observations = self.fields.normed_observations[path_ind, start+1:end+1]
+        actions = self.fields.normed_actions[path_ind, start:end]
+
+        final_obs = np.concatenate([observations, next_observations], axis=-1)
+        batch = InverseBatch(final_obs, actions)
         return batch
 
 class GoalDataset(SequenceDataset):
@@ -131,9 +152,10 @@ class ValueDataset(SequenceDataset):
         ## [0, 1]
         normed = (value - self.vmin) / (self.vmax - self.vmin)
         return normed
-        ## [-1, 1]
-        normed = normed * 2 - 1
-        return normed
+    
+        # ## [-1, 1]
+        # normed = normed * 2 - 1
+        # return normed
 
     def __getitem__(self, idx):
         batch = super().__getitem__(idx)
