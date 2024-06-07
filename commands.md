@@ -10,8 +10,6 @@ docker run -it --rm --gpus all \
 # Train the model
 python scripts/train.py --dataset halfcheetah-medium-expert-v2 --logbase logs
 OR
-python scripts/train_values.py --dataset halfcheetah-medium-expert-v2 --logbase logs
-OR
 python scripts/train_inverse.py --dataset halfcheetah-medium-expert-v2 --logbase logs
 
 # Evaluate the model
