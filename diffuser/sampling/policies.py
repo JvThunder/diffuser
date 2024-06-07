@@ -8,7 +8,7 @@ import diffuser.utils as utils
 from diffuser.datasets.preprocessing import get_policy_preprocess_fn
 
 
-Trajectories = namedtuple('Trajectories', 'actions observations values')
+Trajectories = namedtuple('Trajectories', 'observations values')
 
 
 class GuidedPolicy:
@@ -95,9 +95,9 @@ class InversePolicy:
         
         # trajectories [ batch_size x horizon x transition_dim ]
         # use obs and next_obs to get action
-        obs = trajectories[0, 0:1, :]
-        next_obs = trajectories[0, 1:2, :]
-        obs_cat = np.concatenate([obs, next_obs], axis=1)
+        obs = trajectories[:1, 0:1, :]
+        next_obs = trajectories[:1, 1:2, :]
+        obs_cat = np.concatenate([obs, next_obs], axis=-1)
 
         # make it torch tensor
         obs_cat = torch.tensor(obs_cat, device=self.device, dtype=torch.float32)
@@ -105,12 +105,11 @@ class InversePolicy:
         normed_action = self.inverse_model(obs_cat).detach().cpu().numpy()
         normed_action = normed_action.reshape(-1)
         action = self.normalizer.unnormalize(normed_action, 'actions')
-        print(action.shape)
 
         normed_observations = trajectories
         observations = self.normalizer.unnormalize(normed_observations, 'observations')
 
-        trajectories = Trajectories([action], observations, samples.values)
+        trajectories = Trajectories(observations, samples.values)
         return action, trajectories
 
     @property
