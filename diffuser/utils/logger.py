@@ -21,12 +21,12 @@ class Logger:
         )
 
         ## render video of plans
-        self.renderer.render_plan(
-            os.path.join(self.savepath, f'{t}_plan.mp4'),
-            samples.actions[:self.max_render],
-            samples.observations[:self.max_render],
-            state,
-        )
+        # self.renderer.render_plan(
+        #     os.path.join(self.savepath, f'{t}_plan.mp4'),
+        #     samples.actions[:self.max_render],
+        #     samples.observations[:self.max_render],
+        #     state,
+        # )
 
         if rollout is not None:
             ## render video of rollout thus far
