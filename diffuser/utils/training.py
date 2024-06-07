@@ -125,8 +125,8 @@ class Trainer(object):
                 self.save(label)
 
             if self.step % self.log_freq == 0:
-                infos_str = ' | '.join([f'{key}: {val:8.4f}' for key, val in infos.items()])
-                print(f'{self.step}: {loss:8.4f} | {infos_str} | t: {timer():8.4f}', flush=True)
+                # infos_str = ' | '.join([f'{key}: {val:8.4f}' for key, val in infos.items()])
+                print(f'{self.step}: {loss:8.4f} | t: {timer():8.4f}', flush=True)
 
             if self.render:
                 if self.step == 0 and self.sample_freq:
