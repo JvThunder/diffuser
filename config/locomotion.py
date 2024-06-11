@@ -50,7 +50,7 @@ base = {
         ## training
         'n_steps_per_epoch': 10000,
         'loss_type': 'l2',
-        'n_train_steps': 4e5,
+        'n_train_steps': 2e5,
         'batch_size': 32,
         'learning_rate': 2e-4,
         'gradient_accumulate_every': 2,
@@ -128,7 +128,7 @@ base = {
         'max_render': 8,
 
         ## diffusion model
-        'horizon': 32,
+        'horizon': 4,
         'n_diffusion_steps': 20,
 
         ## value function

@@ -95,7 +95,7 @@ class InversePolicy:
         
         # trajectories [ batch_size x horizon x transition_dim ]
         # use obs and next_obs to get action
-        obs = trajectories[:1, 0:1, :]
+        obs = trajectories[:1, 0:1, :] # obs = condition
         next_obs = trajectories[:1, 1:2, :]
         obs_cat = np.concatenate([obs, next_obs], axis=-1)
 
@@ -104,6 +104,8 @@ class InversePolicy:
 
         normed_action = self.inverse_model(obs_cat).detach().cpu().numpy()
         normed_action = normed_action.reshape(-1)
+        # clip normed action to [-2, 2]
+        normed_action = np.clip(normed_action, -2, 2)
         action = self.normalizer.unnormalize(normed_action, 'actions')
 
         normed_observations = trajectories
