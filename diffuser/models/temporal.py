@@ -79,9 +79,9 @@ class TemporalUnet(nn.Module):
         )
 
         self.reward_mlp = nn.Sequential(
-            nn.Linear(1, dim),
+            nn.Linear(1, 1),
             nn.Mish(),
-            nn.Linear(dim, dim),
+            nn.Linear(1, dim),
         )
 
         self.downs = nn.ModuleList([])
@@ -132,9 +132,9 @@ class TemporalUnet(nn.Module):
 
         x = einops.rearrange(x, 'b h t -> b t h')
 
+        # print("time:", time)
+        # print("cond_reward:", cond_reward)
         # print("-----------------")
-        # print(time)
-        # print(cond_reward)
 
         t = self.time_mlp(time)
         r = self.reward_mlp(cond_reward)

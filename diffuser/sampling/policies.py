@@ -25,8 +25,7 @@ class GuidedPolicy:
         conditions = {k: self.preprocess_fn(v) for k, v in conditions.items()}
         conditions = self._format_conditions(conditions, batch_size)
 
-        horizon = self.diffusion_model.horizon
-        cond_reward = (1 -self.discount ** horizon) / (1 - self.discount)
+        cond_reward = 1
         # cond_reward = 0
         cond_reward = torch.tensor(cond_reward, device=self.device, dtype=torch.float32)
         cond_reward = cond_reward.view(-1, 1)

@@ -107,14 +107,16 @@ class ValueDataset(SequenceDataset):
         adds a value field to the datapoints for training the value function
     '''
 
-    def __init__(self, *args, discount=0.99, normed=False, **kwargs):
+    def __init__(self, *args, discount=0.99, normed=True, **kwargs):
         super().__init__(*args, **kwargs)
         self.discount = discount
         self.discounts = self.discount ** np.arange(self.max_path_length)[:,None]
         self.normed = False
         if normed:
+            print("is normed")
             self.vmin, self.vmax = self._get_bounds()
             self.normed = True
+            
 
     def _get_bounds(self):
         print('[ datasets/sequence ] Getting value dataset bounds...', end=' ', flush=True)
@@ -132,8 +134,8 @@ class ValueDataset(SequenceDataset):
         normed = (value - self.vmin) / (self.vmax - self.vmin)
         return normed
         ## [-1, 1]
-        normed = normed * 2 - 1
-        return normed
+        # normed = normed * 2 - 1
+        # return normed
 
     def __getitem__(self, idx):
         batch = super().__getitem__(idx)
@@ -141,8 +143,10 @@ class ValueDataset(SequenceDataset):
         rewards = self.fields['rewards'][path_ind, start:]
         discounts = self.discounts[:len(rewards)]
         value = (discounts * rewards).sum()
+
         if self.normed:
             value = self.normalize_value(value)
+        
         value = np.array([value], dtype=np.float32)
         value_batch = ValueBatch(*batch, value)
         return value_batch
