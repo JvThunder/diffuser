@@ -161,8 +161,12 @@ class GaussianDiffusion(nn.Module):
 
         batch_size = shape[0]
         x = torch.randn(shape, device=device)
-        print('action dim:', self.action_dim)
+
+        prv = x.clone()
         x = apply_conditioning(x, cond, self.action_dim)
+        print("cond:", cond)
+        print("x:", x)
+        print("diff:", x-prv)
 
         chain = [x] if return_chain else None
 

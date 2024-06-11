@@ -163,8 +163,7 @@ class WeightedLoss(nn.Module):
         '''
         loss = self._loss(pred, targ)
         weighted_loss = (loss * self.weights).mean()
-        # a0_loss = (loss[:, 0, :self.action_dim] / self.weights[0, :self.action_dim]).mean()
-        a0_loss = 0
+        a0_loss = (loss[:, 0, :self.action_dim] / self.weights[0, :self.action_dim]).mean()
         return weighted_loss, {'a0_loss': a0_loss}
 
 class ValueLoss(nn.Module):

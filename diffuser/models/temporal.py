@@ -128,9 +128,10 @@ class TemporalUnet(nn.Module):
         '''
             x : [ batch x horizon x transition ]
         '''
-        print("x:", x)
+        print("x:", x.shape)
         print("cond_r:", cond_reward)
         print("time:", time)
+        exit()
 
         x = einops.rearrange(x, 'b h t -> b t h')
 
