@@ -103,7 +103,7 @@ class InversePolicy:
 
         normed_action = self.inverse_model(obs_cat).detach().cpu().numpy()
         normed_action = normed_action.reshape(-1)
-        # clip normed action to [-2, 2]
+        # clip normed action to [-2, 2] std away
         normed_action = np.clip(normed_action, -2, 2)
         action = self.normalizer.unnormalize(normed_action, 'actions')
 
