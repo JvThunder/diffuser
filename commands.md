@@ -8,9 +8,9 @@ docker run -it --rm --gpus all \
     diffuser /bin/bash -c "cd /home/code && /bin/bash"
 
 # Train the model
-python scripts/train.py --dataset halfcheetah-medium-expert-v2 --logbase logs
+python scripts/train.py --dataset walker2d-medium-replay-v2 --logbase logs/cond
 OR
-python scripts/train_values.py --dataset halfcheetah-medium-expert-v2 --logbase logs
+python scripts/train_values.py --dataset walker2d-medium-replay-v2  --logbase logs/cond
 
 # Evaluate the model
-python scripts/plan_guided.py --dataset halfcheetah-medium-expert-v2 --logbase logs
+python scripts/plan_guided.py --dataset walker2d-medium-replay-v2 --logbase logs/cond

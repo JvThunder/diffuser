@@ -65,51 +65,51 @@ base = {
         'seed': None,
     },
 
-    'values': {
-        'model': 'models.ValueFunction',
-        'diffusion': 'models.ValueDiffusion',
-        'horizon': 32,
-        'n_diffusion_steps': 20,
-        'dim_mults': (1, 2, 4, 8),
-        'renderer': 'utils.MuJoCoRenderer',
+    # 'values': {
+    #     'model': 'models.ValueFunction',
+    #     'diffusion': 'models.ValueDiffusion',
+    #     'horizon': 32,
+    #     'n_diffusion_steps': 20,
+    #     'dim_mults': (1, 2, 4, 8),
+    #     'renderer': 'utils.MuJoCoRenderer',
 
-        ## value-specific kwargs
-        'discount': 0.99,
-        'termination_penalty': -100,
-        'normed': False,
+    #     ## value-specific kwargs
+    #     'discount': 0.99,
+    #     'termination_penalty': -100,
+    #     'normed': False,
 
-        ## dataset
-        'loader': 'datasets.ValueDataset',
-        'normalizer': 'GaussianNormalizer',
-        'preprocess_fns': [],
-        'use_padding': True,
-        'max_path_length': 1000,
+    #     ## dataset
+    #     'loader': 'datasets.ValueDataset',
+    #     'normalizer': 'GaussianNormalizer',
+    #     'preprocess_fns': [],
+    #     'use_padding': True,
+    #     'max_path_length': 1000,
 
-        ## serialization
-        'logbase': logbase,
-        'prefix': 'values/defaults',
-        'exp_name': watch(args_to_watch),
+    #     ## serialization
+    #     'logbase': logbase,
+    #     'prefix': 'values/defaults',
+    #     'exp_name': watch(args_to_watch),
 
-        ## training
-        'n_steps_per_epoch': 10000,
-        'loss_type': 'value_l2',
-        'n_train_steps': 200e3,
-        'batch_size': 32,
-        'learning_rate': 2e-4,
-        'gradient_accumulate_every': 2,
-        'ema_decay': 0.995,
-        'save_freq': 1000,
-        'sample_freq': 0,
-        'n_saves': 5,
-        'save_parallel': False,
-        'n_reference': 8,
-        'bucket': None,
-        'device': 'cuda',
-        'seed': None,
-    },
+    #     ## training
+    #     'n_steps_per_epoch': 10000,
+    #     'loss_type': 'value_l2',
+    #     'n_train_steps': 2e5,
+    #     'batch_size': 32,
+    #     'learning_rate': 2e-4,
+    #     'gradient_accumulate_every': 2,
+    #     'ema_decay': 0.995,
+    #     'save_freq': 1000,
+    #     'sample_freq': 0,
+    #     'n_saves': 5,
+    #     'save_parallel': False,
+    #     'n_reference': 8,
+    #     'bucket': None,
+    #     'device': 'cuda',
+    #     'seed': None,
+    # },
 
     'plan': {
-        'guide': 'sampling.ValueGuide',
+        'guide': None,
         'policy': 'sampling.GuidedPolicy',
         'max_episode_length': 1000,
         'batch_size': 64,
@@ -139,8 +139,8 @@ base = {
         'discount': 0.99,
 
         ## loading
-        'diffusion_loadpath': 'f:diffusion/defaults_H{horizon}_T{n_diffusion_steps}',
-        'value_loadpath': 'f:values/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
+        'diffusion_loadpath': 'f:diffusion/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
+        # 'value_loadpath': 'f:values/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
 
         'diffusion_epoch': 'latest',
         'value_epoch': 'latest',

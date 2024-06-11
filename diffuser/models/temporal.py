@@ -44,6 +44,7 @@ class ResidualTemporalBlock(nn.Module):
         '''
             x : [ batch_size x inp_channels x horizon ]
             t : [ batch_size x embed_dim ]
+            r : [ batch_size x embed_dim ]
             returns:
             out : [ batch_size x out_channels x horizon ]
         '''
@@ -78,9 +79,9 @@ class TemporalUnet(nn.Module):
         )
 
         self.reward_mlp = nn.Sequential(
-            nn.Linear(1, dim * 4),
+            nn.Linear(1, dim),
             nn.Mish(),
-            nn.Linear(dim * 4, dim),
+            nn.Linear(dim, dim),
         )
 
         self.downs = nn.ModuleList([])
