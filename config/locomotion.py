@@ -128,7 +128,7 @@ base = {
         'max_render': 8,
 
         ## diffusion model
-        'horizon': 4,
+        'horizon': 32,
         'n_diffusion_steps': 20,
 
         ## value function

@@ -78,9 +78,9 @@ class TemporalUnet(nn.Module):
         )
 
         self.reward_mlp = nn.Sequential(
-            nn.Linear(1, dim * 4),
+            nn.Linear(1, 1),
             nn.Mish(),
-            nn.Linear(dim * 4, dim),
+            nn.Linear(1, dim),
         )
 
         self.downs = nn.ModuleList([])
