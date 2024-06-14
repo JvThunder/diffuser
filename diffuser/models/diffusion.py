@@ -45,6 +45,7 @@ class GaussianDiffusion(nn.Module):
     def __init__(self, model, horizon, observation_dim, action_dim, n_timesteps=1000,
         loss_type='l1', clip_denoised=False, predict_epsilon=True,
         action_weight=1.0, loss_discount=1.0, loss_weights=None,
+        guidance_weight = 0.5
     ):
         super().__init__()
         self.horizon = horizon
@@ -52,6 +53,7 @@ class GaussianDiffusion(nn.Module):
         self.action_dim = action_dim
         self.transition_dim = observation_dim + action_dim
         self.model = model
+        self.uncond_model = None
 
         betas = cosine_beta_schedule(n_timesteps)
         alphas = 1. - betas
@@ -61,6 +63,7 @@ class GaussianDiffusion(nn.Module):
         self.n_timesteps = int(n_timesteps)
         self.clip_denoised = clip_denoised
         self.predict_epsilon = predict_epsilon
+        self.guidance_weight = guidance_weight
 
         self.register_buffer('betas', betas)
         self.register_buffer('alphas_cumprod', alphas_cumprod)
@@ -144,7 +147,16 @@ class GaussianDiffusion(nn.Module):
         return posterior_mean, posterior_variance, posterior_log_variance_clipped
 
     def p_mean_variance(self, x, cond, cond_reward, t):
-        x_recon = self.predict_start_from_noise(x, t=t, noise=self.model(x, cond_reward, t))
+        # Unconditional prediction
+        epsilon_uncond = self.uncond_model(x, cond[0], t)
+
+        # Conditional prediction
+        epsilon_cond = self.model(x, cond, t, cond_reward)
+
+        # Classifier-free guidance
+        epsilon = epsilon_uncond + self.guidance_weight * (epsilon_cond - epsilon_uncond)
+        
+        x_recon = self.predict_start_from_noise(x, t=t, noise=epsilon)
 
         if self.clip_denoised:
             x_recon.clamp_(-1., 1.)
@@ -164,6 +176,7 @@ class GaussianDiffusion(nn.Module):
         x = apply_conditioning(x, cond, self.action_dim)
 
         chain = [x] if return_chain else None
+        cond_reward = torch.full((batch_size,1), cond_reward[0][0], device=device, dtype=torch.float32)
 
         progress = utils.Progress(self.n_timesteps) if verbose else utils.Silent()
         for i in reversed(range(0, self.n_timesteps)):
@@ -211,7 +224,7 @@ class GaussianDiffusion(nn.Module):
         x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
         x_noisy = apply_conditioning(x_noisy, cond, self.action_dim)
 
-        x_recon = self.model(x_noisy, cond_reward, t)
+        x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward)
         x_recon = apply_conditioning(x_recon, cond, self.action_dim)
 
         assert noise.shape == x_recon.shape
@@ -230,21 +243,3 @@ class GaussianDiffusion(nn.Module):
 
     def forward(self, cond, cond_reward, *args, **kwargs):
         return self.conditional_sample(cond, cond_reward, *args, **kwargs)
-
-
-class ValueDiffusion(GaussianDiffusion):
-    def p_losses(self, x_start, cond, target, t):
-        pass
-    # def p_losses(self, x_start, cond, target, t):
-    #     noise = torch.randn_like(x_start)
-
-    #     x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
-    #     x_noisy = apply_conditioning(x_noisy, cond, self.action_dim)
-
-    #     pred = self.model(x_noisy, cond, t)
-
-    #     loss, info = self.loss_fn(pred, target)
-    #     return loss, info
-
-    # def forward(self, x, cond, t):
-    #     return self.model(x, cond, t)

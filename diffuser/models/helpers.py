@@ -48,20 +48,24 @@ class Conv1dBlock(nn.Module):
         Conv1d --> GroupNorm --> Mish
     '''
 
-    def __init__(self, inp_channels, out_channels, kernel_size, n_groups=8):
+    def __init__(self, inp_channels, out_channels, kernel_size, mish=True, n_groups=8):
         super().__init__()
+
+        if mish:
+            act_fn = nn.Mish()
+        else:
+            act_fn = nn.SiLU()
 
         self.block = nn.Sequential(
             nn.Conv1d(inp_channels, out_channels, kernel_size, padding=kernel_size // 2),
             Rearrange('batch channels horizon -> batch channels 1 horizon'),
             nn.GroupNorm(n_groups, out_channels),
             Rearrange('batch channels 1 horizon -> batch channels horizon'),
-            nn.Mish(),
+            act_fn,
         )
 
     def forward(self, x):
         return self.block(x)
-
 #-----------------------------------------------------------------------------#
 #--------------------------------- attention ---------------------------------#
 #-----------------------------------------------------------------------------#

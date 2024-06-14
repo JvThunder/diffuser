@@ -140,13 +140,13 @@ class ValueDataset(SequenceDataset):
     def __getitem__(self, idx):
         batch = super().__getitem__(idx)
         path_ind, start, end = self.indices[idx]
+        
         rewards = self.fields['rewards'][path_ind, start:]
         discounts = self.discounts[:len(rewards)]
         value = (discounts * rewards).sum()
-
         if self.normed:
             value = self.normalize_value(value)
-        
         value = np.array([value], dtype=np.float32)
+
         value_batch = ValueBatch(*batch, value)
         return value_batch
