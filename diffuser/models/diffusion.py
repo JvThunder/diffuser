@@ -53,7 +53,6 @@ class GaussianDiffusion(nn.Module):
         self.action_dim = action_dim
         self.transition_dim = observation_dim + action_dim
         self.model = model
-        self.uncond_model = None
 
         betas = cosine_beta_schedule(n_timesteps)
         alphas = 1. - betas
@@ -148,7 +147,7 @@ class GaussianDiffusion(nn.Module):
 
     def p_mean_variance(self, x, cond, cond_reward, t):
         # Unconditional prediction
-        epsilon_uncond = self.uncond_model(x, cond[0], t)
+        epsilon_uncond = self.model(x, cond, t, cond_reward, force_dropout=True)
 
         # Conditional prediction
         epsilon_cond = self.model(x, cond, t, cond_reward)
@@ -224,7 +223,11 @@ class GaussianDiffusion(nn.Module):
         x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
         x_noisy = apply_conditioning(x_noisy, cond, self.action_dim)
 
-        x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward)
+        # train force dropout True and False
+        if np.random.rand() < 0.5:
+            x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, force_dropout=False)
+        else:
+            x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, force_dropout=True)
         x_recon = apply_conditioning(x_recon, cond, self.action_dim)
 
         assert noise.shape == x_recon.shape

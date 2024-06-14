@@ -18,7 +18,7 @@ args_to_watch = [
 logbase = 'logs'
 
 base = {
-    'diffusion_cond': {
+    'diffusion': {
         ## model
         'model': 'models.TemporalUnet',
         'diffusion': 'models.GaussianDiffusion',
@@ -45,55 +45,7 @@ base = {
 
         ## serialization
         'logbase': logbase,
-        'prefix': 'diffusion_cond',
-        'exp_name': watch(args_to_watch),
-
-        ## training
-        'n_steps_per_epoch': 10000,
-        'loss_type': 'l2',
-        'n_train_steps': 2e5,
-        'batch_size': 32,
-        'learning_rate': 1e-4,
-        'gradient_accumulate_every': 2,
-        'ema_decay': 0.995,
-        'save_freq': 20000,
-        'sample_freq': 20000,
-        'n_saves': 5,
-        'save_parallel': False,
-        'n_reference': 8,
-        'bucket': None,
-        'device': 'cuda',
-        'seed': None,
-    },
-
-    'diffusion_uncond': {
-        ## model
-        'model': 'models.TemporalUnet',
-        'diffusion': 'models.GaussianDiffusion',
-        'horizon': 32,
-        'n_diffusion_steps': 20,
-        'action_weight': 10,
-        'loss_weights': None,
-        'loss_discount': 1,
-        'predict_epsilon': False,
-        'dim_mults': (1, 2, 4, 8),
-        'attention': False,
-        'renderer': 'utils.MuJoCoRenderer',
-        'discount': 0.99,
-
-        ## dataset
-        # 'loader': 'datasets.SequenceDataset',
-        'loader': 'datasets.ValueDataset', #
-        'normalizer': 'GaussianNormalizer',
-        'preprocess_fns': [],
-        'clip_denoised': False,
-        'use_padding': True,
-        'max_path_length': 1000,
-        'normed': True,
-
-        ## serialization
-        'logbase': logbase,
-        'prefix': 'diffusion_uncond',
+        'prefix': 'diffusion/defaults',
         'exp_name': watch(args_to_watch),
 
         ## training
@@ -146,8 +98,7 @@ base = {
         'discount': 0.99,
 
         ## loading
-        'diffusion_cond_loadpath': 'f:diffusion_cond_H{horizon}_T{n_diffusion_steps}_d{discount}',
-        'diffusion_uncond_loadpath': 'f:diffusion_uncond_H{horizon}_T{n_diffusion_steps}_d{discount}',
+        'diffusion_loadpath': 'f:diffusion/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
         # 'value_loadpath': 'f:values/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
 
         'diffusion_epoch': 'latest',

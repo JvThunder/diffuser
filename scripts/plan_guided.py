@@ -20,24 +20,17 @@ args = Parser().parse_args('plan')
 #-----------------------------------------------------------------------------#
 
 ## load diffusion model and value function from disk
-diffusion_cond_experiment = utils.load_diffusion(
-    args.loadbase, args.dataset, args.diffusion_cond_loadpath,
+diffusion_experiment = utils.load_diffusion(
+    args.loadbase, args.dataset, args.diffusion_loadpath,
     epoch=args.diffusion_epoch, seed=args.seed,
-)
-diffusion_uncond_experiment = utils.load_diffusion(
-    args.loadbase, args.dataset, args.diffusion_uncond_loadpath,
-    epoch=args.value_epoch, seed=args.seed,
 )
 
 ## ensure that the diffusion model and value function are compatible with each other
 # utils.check_compatibility(diffusion_experiment, value_experiment)
 
-diffusion = diffusion_cond_experiment.ema
-dataset = diffusion_cond_experiment.dataset
-renderer = diffusion_cond_experiment.renderer
-uncond_diffusion = diffusion_uncond_experiment.ema
-uncond_model = uncond_diffusion.model
-diffusion.uncond_model = uncond_model
+diffusion = diffusion_experiment.ema
+dataset = diffusion_experiment.dataset
+renderer = diffusion_experiment.renderer
 
 logger_config = utils.Config(
     utils.Logger,
@@ -113,4 +106,4 @@ for t in range(args.max_episode_length):
     observation = next_observation
 
 ## write results to json file at `args.savepath`
-logger.finish(t, score, total_reward, terminal, diffusion_cond_experiment, None)
+logger.finish(t, score, total_reward, terminal, diffusion_experiment, None)

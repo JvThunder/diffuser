@@ -9,7 +9,7 @@ class Parser(utils.Parser):
     dataset: str = 'hopper-medium-expert-v2'
     config: str = 'config.locomotion'
 
-args = Parser().parse_args('diffusion_uncond')
+args = Parser().parse_args('diffusion')
 
 
 #-----------------------------------------------------------------------------#
@@ -53,7 +53,7 @@ model_config = utils.Config(
     cond_dim=observation_dim,
     dim_mults=args.dim_mults,
     device=args.device,
-    returns_condition=False,
+    returns_condition=True,
 )
 
 diffusion_config = utils.Config(
