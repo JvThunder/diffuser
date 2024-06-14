@@ -150,7 +150,7 @@ class GaussianDiffusion(nn.Module):
         epsilon_uncond = self.model(x, cond, t, cond_reward, force_dropout=True)
 
         # Conditional prediction
-        epsilon_cond = self.model(x, cond, t, cond_reward)
+        epsilon_cond = self.model(x, cond, t, cond_reward, use_dropout=False)
 
         # Classifier-free guidance
         epsilon = epsilon_uncond + self.guidance_weight * (epsilon_cond - epsilon_uncond)
@@ -224,9 +224,12 @@ class GaussianDiffusion(nn.Module):
         x_noisy = apply_conditioning(x_noisy, cond, self.action_dim)
 
         # train force dropout True and False
+        train_cond = True
         if np.random.rand() < 0.5:
-            x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, force_dropout=False)
+            train_cond = True
+            x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, use_dropout=False)
         else:
+            train_cond = False
             x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, force_dropout=True)
         x_recon = apply_conditioning(x_recon, cond, self.action_dim)
 
@@ -237,6 +240,7 @@ class GaussianDiffusion(nn.Module):
         else:
             loss, info = self.loss_fn(x_recon, x_start)
 
+        info["train_cond"] = train_cond
         return loss, info
 
     def loss(self, x, *args):
