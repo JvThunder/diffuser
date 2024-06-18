@@ -2,6 +2,7 @@ import pdb
 
 import diffuser.sampling as sampling
 import diffuser.utils as utils
+import numpy as np
 
 
 #-----------------------------------------------------------------------------#
@@ -64,46 +65,50 @@ policy = policy_config()
 #-----------------------------------------------------------------------------#
 #--------------------------------- main loop ---------------------------------#
 #-----------------------------------------------------------------------------#
+num_envs = 1
+envs = [dataset.env for _ in range(num_envs)]
+obs_list = [env.reset() for env in envs]
+observation = np.stack(obs_list, axis=0)
+dones = [0 for _ in range(num_envs)]
+ep_rewards = [0 for _ in range(num_envs)]
+rollouts = [[obs_list[i].copy()] for i in range(num_envs)]
 
-env = dataset.env
-observation = env.reset()
-
-## observations for rendering
-rollout = [observation.copy()]
-
-total_reward = 0
 for t in range(args.max_episode_length):
-
-    if t % 10 == 0: print(args.savepath, flush=True)
-
-    ## save state for rendering only
-    state = env.state_vector().copy()
-
     ## format current observation for conditioning
     conditions = {0: observation}
-    action, samples = policy(conditions, batch_size=args.batch_size, verbose=args.verbose)
+    action, samples = policy(conditions, verbose=args.verbose)
 
-    ## execute action in environment
-    next_observation, reward, terminal, _ = env.step(action)
+    next_obs_list = []
+    for i in range(num_envs):
+        ## save state for rendering only
+        state = envs[i].state_vector().copy()
 
-    ## print reward and score
-    total_reward += reward
-    score = env.get_normalized_score(total_reward)
-    print(
-        f't: {t} | r: {reward:.2f} |  R: {total_reward:.2f} | score: {score:.4f} | scale: {args.scale}',
-        flush=True,
-    )
+        ## execute action in environment
+        next_observation = np.zeros(observation.shape[-1])
+        if not dones[i]:
+            next_observation, reward, done, _ = envs[i].step(action[i])
+        if done: dones[i] = 1
+        next_obs_list.append(next_observation)
 
-    ## update rollout observations
-    rollout.append(next_observation.copy())
+        ## print reward and score
+        ep_rewards[i] += reward
+        score = envs[i].get_normalized_score(ep_rewards[i])
+        print(
+            f't: {t} | r: {reward:.2f} |  R: {ep_rewards[i]:.2f} | score: {score:.4f} | scale: {args.scale}',
+            flush=True,
+        )
 
-    ## render every `args.vis_freq` steps
-    logger.log(t, samples, state, rollout)
+        ## update rollout observations
+        rollouts.append(next_observation.copy())
 
-    if terminal:
-        break
+        ## render every `args.vis_freq` steps
+        logger.log(i, t, samples, state, rollouts[i])
 
+    next_observation = np.stack(next_obs_list, axis=0)
     observation = next_observation
 
+    if sum(dones) == num_envs:
+        break
+
 ## write results to json file at `args.savepath`
-logger.finish(t, score, total_reward, terminal, diffusion_experiment, None)
+logger.finish(t, score, ep_rewards, dones, diffusion_experiment, None)

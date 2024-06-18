@@ -17,17 +17,20 @@ class GuidedPolicy:
         self.diffusion_model = diffusion_model
         self.diffusion_model.guidance_weight = guidance_weight
         self.normalizer = normalizer
+        self.transition_dim = diffusion_model.transition_dim
+        self.observation_dim = diffusion_model.observation_dim
         self.action_dim = diffusion_model.action_dim
         self.preprocess_fn = get_policy_preprocess_fn(preprocess_fns)
         self.sample_kwargs = sample_kwargs
         self.discount = discount
 
-    def __call__(self, conditions, batch_size=1, verbose=True):
+    def __call__(self, conditions, verbose=True):
+        batch_size = conditions[0].shape[0]
+
         conditions = {k: self.preprocess_fn(v) for k, v in conditions.items()}
         conditions = self._format_conditions(conditions, batch_size)
 
         cond_reward = 1
-        # cond_reward = 0
         cond_reward = torch.tensor(cond_reward, device=self.device, dtype=torch.float32)
         cond_reward = cond_reward.view(-1, 1)
 
@@ -36,17 +39,20 @@ class GuidedPolicy:
         trajectories = utils.to_np(samples.trajectories)
 
         ## extract action [ batch_size x horizon x transition_dim ]
+
+        # last dim: [self.action_dim, self.observation_dim, self.action_dim, ... self.observation_dim] 
         actions = trajectories[:, :, :self.action_dim]
+        
         actions = self.normalizer.unnormalize(actions, 'actions')
 
         ## extract first action
-        action = actions[0, 0]
+        first_actions = actions[:, 0]
 
         normed_observations = trajectories[:, :, self.action_dim:]
         observations = self.normalizer.unnormalize(normed_observations, 'observations')
 
         trajectories = Trajectories(actions, observations, samples.values)
-        return action, trajectories
+        return first_actions, trajectories
 
     @property
     def device(self):
@@ -60,9 +66,4 @@ class GuidedPolicy:
             'observations',
         )
         conditions = utils.to_torch(conditions, dtype=torch.float32, device='cuda:0')
-        conditions = utils.apply_dict(
-            einops.repeat,
-            conditions,
-            'd -> repeat d', repeat=batch_size,
-        )
         return conditions

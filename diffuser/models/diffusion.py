@@ -183,7 +183,8 @@ class GaussianDiffusion(nn.Module):
             x, values = sample_fn(self, x, cond, cond_reward, t)
             x = apply_conditioning(x, cond, self.action_dim)
 
-            progress.update({'t': i, 'vmin': values.min().item(), 'vmax': values.max().item()})
+            # progress.update({'t': i, 'vmin': values.min().item(), 'vmax': values.max().item()})
+            progress.update({'t': i})
             if return_chain: chain.append(x)
 
         progress.stamp()

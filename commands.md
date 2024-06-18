@@ -11,4 +11,4 @@ docker run -it --rm --gpus all \
 python scripts/train.py --dataset hopper-medium-replay-v2 --logbase logs/new_cond_sa
 
 # Evaluate the model
-python scripts/plan_guided.py --dataset  hopper-medium-replay-v2 --logbase logs/new_cond_sa
+python scripts/plan_guided_parallel.py --dataset  hopper-medium-replay-v2 --logbase logs/new_cond_sa

@@ -105,7 +105,6 @@ base = {
         'value_epoch': 'latest',
 
         'verbose': True,
-        'suffix': '0',
     },
 }
 
