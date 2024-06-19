@@ -22,7 +22,7 @@ base = {
         ## model
         'model': 'models.TemporalUnet',
         'diffusion': 'models.GaussianDiffusion',
-        'horizon': 32,
+        'horizon': 128,
         'n_diffusion_steps': 20,
         'action_weight': 10,
         'loss_weights': None,
@@ -91,9 +91,9 @@ base = {
         'max_render': 8,
 
         ## diffusion model
-        'horizon': 32,
+        'horizon': 128,
         'n_diffusion_steps': 20,
-        'guidance_weight':1.2,
+        'guidance_weight': 1.2,
 
         ## value function
         'discount': 0.99,
