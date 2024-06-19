@@ -75,7 +75,7 @@ rollouts = [[obs_list[i].copy()] for i in range(num_envs)]
 
 for t in range(args.max_episode_length):
     ## format current observation for conditioning
-    conditions = {0: observation}
+    conditions = observation
     action, samples = policy(conditions, verbose=args.verbose)
 
     next_obs_list = []
@@ -105,7 +105,7 @@ for t in range(args.max_episode_length):
         rollouts.append(next_observation.copy())
 
         ## render every `args.vis_freq` steps
-        logger.log(i, t, samples, state, rollouts[i])
+        # logger.log(i, t, samples, state, rollouts[i])
 
     next_observation = np.stack(next_obs_list, axis=0)
     observation = next_observation
