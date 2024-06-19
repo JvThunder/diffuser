@@ -18,7 +18,7 @@ class SequenceDataset(torch.utils.data.Dataset):
     def load_env(self):
         return load_environment(self.env_name)
 
-    def __init__(self, env='hopper-medium-replay', horizon=64,
+    def __init__(self, env='hopper-medium-replay', horizon=20,
         normalizer='LimitsNormalizer', preprocess_fns=[], max_path_length=1000,
         max_n_episodes=10000, termination_penalty=0, use_padding=True, seed=None):
         self.preprocess_fn = get_preprocess_fn(preprocess_fns, env)
@@ -89,8 +89,11 @@ class SequenceDataset(torch.utils.data.Dataset):
         observations = self.fields.normed_observations[path_ind, start:end]
         actions = self.fields.normed_actions[path_ind, start:end]
 
-        conditions = self.get_conditions(observations)
-        trajectories = np.concatenate([actions, observations], axis=-1)
+        # conditions = self.get_conditions(observations)
+        # trajectories = np.concatenate([actions, observations], axis=-1)
+        conditions = observations[0]
+        trajectories = actions
+
         batch = Batch(trajectories, conditions)
         return batch
 
