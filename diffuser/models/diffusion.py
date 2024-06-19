@@ -8,7 +8,7 @@ import diffuser.utils as utils
 from .helpers import (
     cosine_beta_schedule,
     extract,
-    apply_conditioning,
+    # apply_conditioning,
     Losses,
 )
 
@@ -49,9 +49,9 @@ class GaussianDiffusion(nn.Module):
     ):
         super().__init__()
         self.horizon = horizon
-        self.observation_dim = observation_dim
+        self.observation_dim = 0
         self.action_dim = action_dim
-        self.transition_dim = observation_dim + action_dim
+        self.transition_dim = action_dim
         self.model = model
 
         betas = cosine_beta_schedule(n_timesteps)
@@ -174,7 +174,7 @@ class GaussianDiffusion(nn.Module):
 
         batch_size = shape[0]
         x = torch.randn(shape, device=device)
-        x = apply_conditioning(x, cond, self.action_dim)
+        # x = apply_conditioning(x, cond, self.action_dim)
 
         chain = [x] if return_chain else None
         cond_reward = torch.full((batch_size,1), cond_reward[0][0], device=device, dtype=torch.float32)
@@ -183,7 +183,7 @@ class GaussianDiffusion(nn.Module):
         for i in reversed(range(0, self.n_timesteps)):
             t = make_timesteps(batch_size, i, device)
             x, values = sample_fn(self, x, cond, cond_reward, t)
-            x = apply_conditioning(x, cond, self.action_dim)
+            # x = apply_conditioning(x, cond, self.action_dim)
 
             # progress.update({'t': i, 'vmin': values.min().item(), 'vmax': values.max().item()})
             progress.update({'t': i})
@@ -201,7 +201,7 @@ class GaussianDiffusion(nn.Module):
             conditions : [ (time, state), ... ]
         '''
         device = self.betas.device
-        batch_size = len(cond[0])
+        batch_size = len(cond)
         horizon = horizon or self.horizon
         shape = (batch_size, horizon, self.transition_dim)
 
@@ -224,7 +224,7 @@ class GaussianDiffusion(nn.Module):
         noise = torch.randn_like(x_start)
 
         x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
-        x_noisy = apply_conditioning(x_noisy, cond, self.action_dim)
+        # x_noisy = apply_conditioning(x_noisy, cond, self.action_dim)
 
         # train force dropout True and False
         train_cond = True
@@ -236,7 +236,7 @@ class GaussianDiffusion(nn.Module):
             # conditioning
             train_cond = True
             x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, use_dropout=False)
-        x_recon = apply_conditioning(x_recon, cond, self.action_dim)
+        # x_recon = apply_conditioning(x_recon, cond, self.action_dim)
 
         assert noise.shape == x_recon.shape
 
