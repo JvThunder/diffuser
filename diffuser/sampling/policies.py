@@ -27,7 +27,7 @@ class GuidedPolicy:
     def __call__(self, conditions, verbose=True):
         batch_size = conditions[0].shape[0]
 
-        conditions = {k: self.preprocess_fn(v) for k, v in conditions.items()}
+        # conditions = {k: self.preprocess_fn(v) for k, v in conditions.items()}
         conditions = self._format_conditions(conditions, batch_size)
 
         cond_reward = 1
@@ -48,7 +48,9 @@ class GuidedPolicy:
         ## extract first action
         first_actions = actions[:, 0]
 
-        normed_observations = trajectories[:, :, self.action_dim:]
+        # normed_observations = trajectories[:, :, self.action_dim:]
+        # observations = self.normalizer.unnormalize(normed_observations, 'observations')
+        normed_observations = conditions.reshape(conditions.shape[0], -1, conditions.shape[1]).detach().cpu().numpy()
         observations = self.normalizer.unnormalize(normed_observations, 'observations')
 
         trajectories = Trajectories(actions, observations, samples.values)
@@ -60,10 +62,11 @@ class GuidedPolicy:
         return parameters[0].device
 
     def _format_conditions(self, conditions, batch_size):
-        conditions = utils.apply_dict(
-            self.normalizer.normalize,
-            conditions,
-            'observations',
-        )
+        # conditions = utils.apply_dict(
+        #     self.normalizer.normalize,
+        #     conditions,
+        #     'observations',
+        # )
+        conditions = self.normalizer.normalize(conditions, 'observations')
         conditions = utils.to_torch(conditions, dtype=torch.float32, device='cuda:0')
         return conditions

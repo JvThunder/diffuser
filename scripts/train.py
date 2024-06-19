@@ -49,7 +49,7 @@ model_config = utils.Config(
     args.model,
     savepath=(args.savepath, 'model_config.pkl'),
     horizon=args.horizon,
-    transition_dim=observation_dim + action_dim,
+    transition_dim=action_dim,
     cond_dim=observation_dim,
     dim_mults=args.dim_mults,
     device=args.device,

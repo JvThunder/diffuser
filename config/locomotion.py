@@ -22,7 +22,7 @@ base = {
         ## model
         'model': 'models.TemporalUnet',
         'diffusion': 'models.GaussianDiffusion',
-        'horizon': 16,
+        'horizon': 32,
         'n_diffusion_steps': 20,
         'action_weight': 10,
         'loss_weights': None,
@@ -52,9 +52,9 @@ base = {
         ## training
         'n_steps_per_epoch': 10000,
         'loss_type': 'l2',
-        'n_train_steps': 3e5,
-        'batch_size': 32,
-        'learning_rate': 1e-4,
+        'n_train_steps': 1e5,
+        'batch_size': 64,
+        'learning_rate': 1e-5,
         'gradient_accumulate_every': 2,
         'ema_decay': 0.995,
         'save_freq': 20000,
@@ -91,7 +91,7 @@ base = {
         'max_render': 8,
 
         ## diffusion model
-        'horizon': 16,
+        'horizon': 32,
         'n_diffusion_steps': 20,
         'guidance_weight':1.2,
 
