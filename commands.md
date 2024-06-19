@@ -8,7 +8,7 @@ docker run -it --rm --gpus all \
     diffuser /bin/bash -c "cd /home/code && /bin/bash"
 
 # Train the model
-python scripts/train.py --dataset hopper-medium-replay-v2 --logbase logs/new_cond_sa
+python scripts/train.py --dataset hopper-medium-replay-v2 --logbase logs/cond_a
 
 # Evaluate the model
-python scripts/plan_guided_parallel.py --dataset  hopper-medium-replay-v2 --logbase logs/new_cond_sa
+python scripts/plan_guided_parallel.py --dataset  hopper-medium-replay-v2 --logbase logs/cond_a
