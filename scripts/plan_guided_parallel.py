@@ -45,13 +45,13 @@ logger_config = utils.Config(
 policy_config = utils.Config(
     args.policy,
     guide=None,
-    scale=args.scale,
     diffusion_model=diffusion,
     normalizer=dataset.normalizer,
     preprocess_fns=args.preprocess_fns,
     verbose=False,
     guidance_weight=args.guidance_weight,
     ## sampling kwargs
+    # scale=args.scale,
     # sample_fn=sampling.n_step_guided_p_sample,
     # n_guide_steps=args.n_guide_steps,
     # t_stopgrad=args.t_stopgrad,
@@ -65,8 +65,8 @@ policy = policy_config()
 #-----------------------------------------------------------------------------#
 #--------------------------------- main loop ---------------------------------#
 #-----------------------------------------------------------------------------#
-num_envs = 1
-envs = [dataset.env for _ in range(num_envs)]
+num_envs = 10
+envs = [dataset.load_env() for _ in range(num_envs)]
 obs_list = [env.reset() for env in envs]
 observation = np.stack(obs_list, axis=0)
 dones = [0 for _ in range(num_envs)]
@@ -84,9 +84,12 @@ for t in range(args.max_episode_length):
         state = envs[i].state_vector().copy()
 
         ## execute action in environment
-        next_observation = np.zeros(observation.shape[-1])
         if not dones[i]:
             next_observation, reward, done, _ = envs[i].step(action[i])
+        else:
+            next_observation = np.zeros(observation.shape[-1])
+            reward = 0
+            done = True
         if done: dones[i] = 1
         next_obs_list.append(next_observation)
 
@@ -94,7 +97,7 @@ for t in range(args.max_episode_length):
         ep_rewards[i] += reward
         score = envs[i].get_normalized_score(ep_rewards[i])
         print(
-            f't: {t} | r: {reward:.2f} |  R: {ep_rewards[i]:.2f} | score: {score:.4f} | scale: {args.scale}',
+            f't: {t} | r: {reward:.2f} |  R: {ep_rewards[i]:.2f} | score: {score:.4f} | done: {dones[i]}',
             flush=True,
         )
 
@@ -109,6 +112,8 @@ for t in range(args.max_episode_length):
 
     if sum(dones) == num_envs:
         break
+
+print("Average total rewards:", np.mean(ep_rewards))
 
 ## write results to json file at `args.savepath`
 logger.finish(t, score, ep_rewards, dones, diffusion_experiment, None)

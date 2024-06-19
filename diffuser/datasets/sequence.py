@@ -15,11 +15,15 @@ ValueBatch = namedtuple('ValueBatch', 'trajectories conditions values')
 
 class SequenceDataset(torch.utils.data.Dataset):
 
+    def load_env(self):
+        return load_environment(self.env_name)
+
     def __init__(self, env='hopper-medium-replay', horizon=64,
         normalizer='LimitsNormalizer', preprocess_fns=[], max_path_length=1000,
         max_n_episodes=10000, termination_penalty=0, use_padding=True, seed=None):
         self.preprocess_fn = get_preprocess_fn(preprocess_fns, env)
-        self.env = env = load_environment(env)
+        self.env_name = env
+        self.env = env = load_environment(self.env_name)
         self.env.seed(seed)
         self.horizon = horizon
         self.max_path_length = max_path_length
