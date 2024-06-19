@@ -32,6 +32,7 @@ base = {
         'attention': False,
         'renderer': 'utils.MuJoCoRenderer',
         'discount': 0.99,
+        'p_uncond': 0.2,
 
         ## dataset
         # 'loader': 'datasets.SequenceDataset',
@@ -92,7 +93,7 @@ base = {
         ## diffusion model
         'horizon': 16,
         'n_diffusion_steps': 20,
-        'guidance_weight': 1.2,
+        'guidance_weight':1.2,
 
         ## value function
         'discount': 0.99,

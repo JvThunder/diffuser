@@ -45,7 +45,7 @@ class GaussianDiffusion(nn.Module):
     def __init__(self, model, horizon, observation_dim, action_dim, n_timesteps=1000,
         loss_type='l1', clip_denoised=False, predict_epsilon=True,
         action_weight=1.0, loss_discount=1.0, loss_weights=None,
-        guidance_weight = 0.5
+        guidance_weight = 0.5, p_uncond = 0.2,
     ):
         super().__init__()
         self.horizon = horizon
@@ -91,6 +91,8 @@ class GaussianDiffusion(nn.Module):
         ## get loss coefficients and initialize objective
         loss_weights = self.get_loss_weights(action_weight, loss_discount, loss_weights)
         self.loss_fn = Losses[loss_type](loss_weights, self.action_dim)
+
+        self.p_uncond = p_uncond
 
     def get_loss_weights(self, action_weight, discount, weights_dict):
         '''
@@ -226,12 +228,14 @@ class GaussianDiffusion(nn.Module):
 
         # train force dropout True and False
         train_cond = True
-        if np.random.rand() < 0.5:
-            train_cond = True
-            x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, use_dropout=False)
-        else:
+        if np.random.rand() < self.p_uncond:
+            # unconditioning
             train_cond = False
             x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, force_dropout=True)
+        else:
+            # conditioning
+            train_cond = True
+            x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, use_dropout=False)
         x_recon = apply_conditioning(x_recon, cond, self.action_dim)
 
         assert noise.shape == x_recon.shape

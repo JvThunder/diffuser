@@ -66,6 +66,7 @@ diffusion_config = utils.Config(
     loss_type=args.loss_type,
     clip_denoised=args.clip_denoised,
     predict_epsilon=args.predict_epsilon,
+    p_uncond=args.p_uncond,
     ## loss weighting
     action_weight=args.action_weight,
     loss_weights=args.loss_weights,
