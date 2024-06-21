@@ -12,9 +12,10 @@ import numpy as np
 class Parser(utils.Parser):
     dataset: str = 'walker2d-medium-replay-v2'
     config: str = 'config.locomotion'
+    guidance_weight: float = 4.0
 
 args = Parser().parse_args('plan')
-
+print("Using w:", args.guidance_weight)
 
 #-----------------------------------------------------------------------------#
 #---------------------------------- loading ----------------------------------#
