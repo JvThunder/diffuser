@@ -2,7 +2,7 @@ import subprocess
 import json
 
 # List of guidance weights to test
-guidance_weights = [0.5, 0.7, 1.5, 2.0, 3.0, 4.0, 6.0]
+guidance_weights = [0.5, 0.7, 1.5, 2.0, 3.0, 4.0, 6.0, 10.0]
 dataset = 'hopper-medium-replay-v2'
 logbase = 'logs/cond_a'
 config_path = 'config/locomotion.py'

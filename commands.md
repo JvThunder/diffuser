@@ -11,4 +11,4 @@ docker run -it --rm --gpus all \
 python scripts/train.py --dataset hopper-medium-replay-v2 --logbase logs/cond_a
 
 # Evaluate the model
-python scripts/plan_guided_parallel.py --dataset  hopper-medium-replay-v2 --logbase logs/cond_a
+python scripts/plan_guided_parallel.py --dataset  hopper-medium-replay-v2 --logbase logs/cond_a --guidance_weight 10
