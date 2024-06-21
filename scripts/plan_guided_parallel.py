@@ -65,7 +65,7 @@ policy = policy_config()
 #-----------------------------------------------------------------------------#
 #--------------------------------- main loop ---------------------------------#
 #-----------------------------------------------------------------------------#
-num_envs = 10
+num_envs = 100
 envs = [dataset.load_env() for _ in range(num_envs)]
 obs_list = [env.reset() for env in envs]
 observation = np.stack(obs_list, axis=0)

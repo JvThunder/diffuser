@@ -22,17 +22,16 @@ base = {
         ## model
         'model': 'models.TemporalUnet',
         'diffusion': 'models.GaussianDiffusion',
-        'horizon': 128,
+        'horizon': 32,
         'n_diffusion_steps': 20,
         'action_weight': 10,
         'loss_weights': None,
         'loss_discount': 1,
         'predict_epsilon': False,
         'dim_mults': (1, 2, 4, 8),
-        'attention': False,
         'renderer': 'utils.MuJoCoRenderer',
         'discount': 0.99,
-        'p_uncond': 0.2,
+        'p_uncond': 0.5,
 
         ## dataset
         # 'loader': 'datasets.SequenceDataset',
@@ -50,11 +49,11 @@ base = {
         'exp_name': watch(args_to_watch),
 
         ## training
-        'n_steps_per_epoch': 10000,
+        'n_steps_per_epoch': 1000,
         'loss_type': 'l2',
-        'n_train_steps': 1e5,
-        'batch_size': 64,
-        'learning_rate': 1e-5,
+        'n_train_steps': 3e5,
+        'batch_size': 32,
+        'learning_rate': 2e-4,
         'gradient_accumulate_every': 2,
         'ema_decay': 0.995,
         'save_freq': 20000,
@@ -91,9 +90,9 @@ base = {
         'max_render': 8,
 
         ## diffusion model
-        'horizon': 128,
+        'horizon': 32,
         'n_diffusion_steps': 20,
-        'guidance_weight': 1.2,
+        'guidance_weight': 2,
 
         ## value function
         'discount': 0.99,

@@ -2,6 +2,7 @@ from collections import namedtuple
 import torch
 import einops
 import pdb
+import numpy as np
 
 import diffuser.utils as utils
 from diffuser.datasets.preprocessing import get_policy_preprocess_fn
@@ -42,7 +43,8 @@ class GuidedPolicy:
 
         # last dim: [self.action_dim, self.observation_dim, self.action_dim, ... self.observation_dim] 
         actions = trajectories[:, :, :self.action_dim]
-        
+        # clip to [-3, 3]
+        actions = np.clip(actions, -3, 3)
         actions = self.normalizer.unnormalize(actions, 'actions')
 
         ## extract first action

@@ -117,8 +117,8 @@ class Trainer(object):
             if self.step % self.update_ema_every == 0:
                 self.step_ema()
 
-            if self.step % self.save_freq == 0:
-                label = self.step // self.label_freq * self.label_freq
+            if (self.step+1) % self.save_freq == 0:
+                label = (self.step+1) // self.label_freq * self.label_freq
                 self.save(label)
 
             if self.step % self.log_freq == 0:

@@ -145,6 +145,14 @@ class TemporalUnet(nn.Module):
         self.condition_dropout = condition_dropout
         self.calc_energy = calc_energy
 
+        self.cond_mlp = nn.Sequential(
+                        nn.Linear(cond_dim, dim),
+                        act_fn,
+                        nn.Linear(dim, dim * 4),
+                        act_fn,
+                        nn.Linear(dim * 4, dim),
+                    )
+
         if self.returns_condition:
             self.returns_mlp = nn.Sequential(
                         nn.Linear(1, dim),
@@ -153,17 +161,10 @@ class TemporalUnet(nn.Module):
                         act_fn,
                         nn.Linear(dim * 4, dim),
                     )
-            self.cond_mlp = nn.Sequential(
-                        nn.Linear(cond_dim, dim),
-                        act_fn,
-                        nn.Linear(dim, dim * 4),
-                        act_fn,
-                        nn.Linear(dim * 4, dim),
-                    )
             self.mask_dist = Bernoulli(probs=1-self.condition_dropout)
             embed_dim = 3*dim
         else:
-            embed_dim = dim
+            embed_dim = 2*dim
 
         self.downs = nn.ModuleList([])
         self.ups = nn.ModuleList([])
@@ -221,14 +222,9 @@ class TemporalUnet(nn.Module):
                 returns_embed = 0*returns_embed
             t = torch.cat([t, returns_embed], dim=-1)
 
-            assert cond is not None  # Assuming 'cond' is another input
-            cond_embed = self.cond_mlp(cond)  # Assuming you have a similar MLP for 'cond'
-            if use_dropout:
-                mask = self.mask_dist.sample(sample_shape=(cond_embed.size(0), 1)).to(cond_embed.device)
-                cond_embed = mask*cond_embed
-            if force_dropout:
-                cond_embed = 0*cond_embed
-            t = torch.cat([t, cond_embed], dim=-1)
+        assert cond is not None  # Assuming 'cond' is another input
+        cond_embed = self.cond_mlp(cond)  # Assuming you have a similar MLP for 'cond'
+        t = torch.cat([t, cond_embed], dim=-1)
 
         h = []
 
