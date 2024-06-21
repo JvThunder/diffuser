@@ -13,6 +13,7 @@ args_to_watch = [
     ('n_diffusion_steps', 'T'),
     ## value kwargs
     ('discount', 'd'),
+    ('guidance_weight', 'w'),
 ]
 
 logbase = 'logs'
@@ -92,7 +93,6 @@ base = {
         ## diffusion model
         'horizon': 32,
         'n_diffusion_steps': 20,
-        'guidance_weight': 2,
 
         ## value function
         'discount': 0.99,
