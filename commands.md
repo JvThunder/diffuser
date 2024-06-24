@@ -12,3 +12,5 @@ python scripts/train.py --dataset hopper-medium-replay-v2 --logbase logs/cond_a
 
 # Evaluate the model
 python scripts/plan_guided_parallel.py --dataset  hopper-medium-replay-v2 --logbase logs/cond_a --guidance_weight 10
+
+python scripts/eval_mult_weights.py
