@@ -91,6 +91,7 @@ for t in range(args.max_episode_length):
             next_observation = np.zeros(observation.shape[-1])
             reward = 0
             done = True
+            
         if done: dones[i] = 1
         next_obs_list.append(next_observation)
 
