@@ -12,10 +12,11 @@ import numpy as np
 class Parser(utils.Parser):
     dataset: str = 'walker2d-medium-replay-v2'
     config: str = 'config.locomotion'
-    guidance_weight: float = 4.0
+    guidance_weight: float = 1.0
+    horizon: int = 32
 
 args = Parser().parse_args('plan')
-print("Using w:", args.guidance_weight)
+args.diffusion_loadpath = f'diffusion/defaults_H{args.horizon}_T{args.n_diffusion_steps}_d{args.discount}'
 
 #-----------------------------------------------------------------------------#
 #---------------------------------- loading ----------------------------------#

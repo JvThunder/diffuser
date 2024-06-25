@@ -18,7 +18,7 @@ args_to_watch = [
 
 logbase = 'logs'
 
-h = 32
+h = 64
 n_steps = 20
 d = 0.99
 
@@ -27,7 +27,7 @@ base = {
         ## model
         'model': 'models.TemporalUnet',
         'diffusion': 'models.GaussianDiffusion',
-        'horizon': h,
+        # 'horizon': h,
         'n_diffusion_steps': n_steps,
         'action_weight': 10,
         'loss_weights': None,
@@ -95,14 +95,14 @@ base = {
         'max_render': 8,
 
         ## diffusion model
-        'horizon': h,
+        # 'horizon': h,
         'n_diffusion_steps': n_steps,
 
         ## value function
         'discount': d,
 
         ## loading
-        'diffusion_loadpath': 'f:diffusion/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
+        # 'diffusion_loadpath': 'f:diffusion/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
         # 'value_loadpath': 'f:values/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
 
         'diffusion_epoch': 'latest',
