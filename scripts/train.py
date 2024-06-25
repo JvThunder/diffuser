@@ -25,6 +25,7 @@ dataset_config = utils.Config(
     preprocess_fns=args.preprocess_fns,
     use_padding=args.use_padding,
     max_path_length=args.max_path_length,
+    normed=True,
 )
 
 render_config = utils.Config(
@@ -48,11 +49,11 @@ model_config = utils.Config(
     args.model,
     savepath=(args.savepath, 'model_config.pkl'),
     horizon=args.horizon,
-    transition_dim=observation_dim + action_dim,
+    transition_dim=action_dim,
     cond_dim=observation_dim,
     dim_mults=args.dim_mults,
-    attention=args.attention,
     device=args.device,
+    returns_condition=True,
 )
 
 diffusion_config = utils.Config(
@@ -65,6 +66,7 @@ diffusion_config = utils.Config(
     loss_type=args.loss_type,
     clip_denoised=args.clip_denoised,
     predict_epsilon=args.predict_epsilon,
+    p_uncond=args.p_uncond,
     ## loss weighting
     action_weight=args.action_weight,
     loss_weights=args.loss_weights,
@@ -107,10 +109,10 @@ utils.report_parameters(model)
 
 print('Testing forward...', end=' ', flush=True)
 batch = utils.batchify(dataset[0])
+print(batch.values)
 loss, _ = diffusion.loss(*batch)
 loss.backward()
 print('✓')
-
 
 #-----------------------------------------------------------------------------#
 #--------------------------------- main loop ---------------------------------#

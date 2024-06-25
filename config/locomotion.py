@@ -13,32 +13,40 @@ args_to_watch = [
     ('n_diffusion_steps', 'T'),
     ## value kwargs
     ('discount', 'd'),
+    ('guidance_weight', 'w'),
 ]
 
 logbase = 'logs'
+
+h = 32
+n_steps = 20
+d = 0.99
 
 base = {
     'diffusion': {
         ## model
         'model': 'models.TemporalUnet',
         'diffusion': 'models.GaussianDiffusion',
-        'horizon': 32,
-        'n_diffusion_steps': 20,
+        'horizon': h,
+        'n_diffusion_steps': n_steps,
         'action_weight': 10,
         'loss_weights': None,
         'loss_discount': 1,
         'predict_epsilon': False,
         'dim_mults': (1, 2, 4, 8),
-        'attention': False,
         'renderer': 'utils.MuJoCoRenderer',
+        'discount': d,
+        'p_uncond': 0.5,
 
         ## dataset
-        'loader': 'datasets.SequenceDataset',
+        # 'loader': 'datasets.SequenceDataset',
+        'loader': 'datasets.ValueDataset', #
         'normalizer': 'GaussianNormalizer',
         'preprocess_fns': [],
         'clip_denoised': False,
         'use_padding': True,
         'max_path_length': 1000,
+        'normed': True,
 
         ## serialization
         'logbase': logbase,
@@ -46,9 +54,9 @@ base = {
         'exp_name': watch(args_to_watch),
 
         ## training
-        'n_steps_per_epoch': 10000,
-        'loss_type': 'l2',
-        'n_train_steps': 1e5,
+        'n_steps_per_epoch': 1000,
+        'loss_type': 'l2,
+        'n_train_steps': 3e5,
         'batch_size': 32,
         'learning_rate': 2e-4,
         'gradient_accumulate_every': 2,
@@ -63,63 +71,20 @@ base = {
         'seed': None,
     },
 
-    'values': {
-        'model': 'models.ValueFunction',
-        'diffusion': 'models.ValueDiffusion',
-        'horizon': 32,
-        'n_diffusion_steps': 20,
-        'dim_mults': (1, 2, 4, 8),
-        'renderer': 'utils.MuJoCoRenderer',
-
-        ## value-specific kwargs
-        'discount': 0.99,
-        'termination_penalty': -100,
-        'normed': False,
-
-        ## dataset
-        'loader': 'datasets.ValueDataset',
-        'normalizer': 'GaussianNormalizer',
-        'preprocess_fns': [],
-        'use_padding': True,
-        'max_path_length': 1000,
-
-        ## serialization
-        'logbase': logbase,
-        'prefix': 'values/defaults',
-        'exp_name': watch(args_to_watch),
-
-        ## training
-        'n_steps_per_epoch': 10000,
-        'loss_type': 'value_l2',
-        'n_train_steps': 1e5,
-        'batch_size': 32,
-        'learning_rate': 2e-4,
-        'gradient_accumulate_every': 2,
-        'ema_decay': 0.995,
-        'save_freq': 1000,
-        'sample_freq': 0,
-        'n_saves': 5,
-        'save_parallel': False,
-        'n_reference': 8,
-        'bucket': None,
-        'device': 'cuda',
-        'seed': None,
-    },
-
     'plan': {
-        'guide': 'sampling.ValueGuide',
+        'guide': None,
         'policy': 'sampling.GuidedPolicy',
         'max_episode_length': 1000,
-        'batch_size': 64,
+        # 'batch_size': 64,
         'preprocess_fns': [],
         'device': 'cuda',
         'seed': None,
 
         ## sample_kwargs
-        'n_guide_steps': 2,
-        'scale': 0.1,
-        't_stopgrad': 2,
-        'scale_grad_by_std': True,
+        # 'n_guide_steps': 2,
+        # 'scale': 0.1,
+        # 't_stopgrad': 2,
+        # 'scale_grad_by_std': True,
 
         ## serialization
         'loadbase': None,
@@ -130,21 +95,20 @@ base = {
         'max_render': 8,
 
         ## diffusion model
-        'horizon': 32,
-        'n_diffusion_steps': 20,
+        'horizon': h,
+        'n_diffusion_steps': n_steps,
 
         ## value function
-        'discount': 0.99,
+        'discount': d,
 
         ## loading
-        'diffusion_loadpath': 'f:diffusion/defaults_H{horizon}_T{n_diffusion_steps}',
-        'value_loadpath': 'f:values/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
+        'diffusion_loadpath': 'f:diffusion/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
+        # 'value_loadpath': 'f:values/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
 
         'diffusion_epoch': 'latest',
         'value_epoch': 'latest',
 
         'verbose': True,
-        'suffix': '0',
     },
 }
 

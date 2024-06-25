@@ -117,19 +117,19 @@ class Trainer(object):
             if self.step % self.update_ema_every == 0:
                 self.step_ema()
 
-            if self.step % self.save_freq == 0:
-                label = self.step // self.label_freq * self.label_freq
+            if (self.step+1) % self.save_freq == 0:
+                label = (self.step+1) // self.label_freq * self.label_freq
                 self.save(label)
 
             if self.step % self.log_freq == 0:
                 infos_str = ' | '.join([f'{key}: {val:8.4f}' for key, val in infos.items()])
                 print(f'{self.step}: {loss:8.4f} | {infos_str} | t: {timer():8.4f}', flush=True)
 
-            if self.step == 0 and self.sample_freq:
-                self.render_reference(self.n_reference)
+            # if self.step == 0 and self.sample_freq:
+            #     self.render_reference(self.n_reference)
 
-            if self.sample_freq and self.step % self.sample_freq == 0:
-                self.render_samples()
+            # if self.sample_freq and self.step % self.sample_freq == 0:
+            #     self.render_samples()
 
             self.step += 1
 
@@ -196,6 +196,7 @@ class Trainer(object):
             ## get a single datapoint
             batch = self.dataloader_vis.__next__()
             conditions = to_device(batch.conditions, 'cuda:0')
+            reward_conditions = to_device(batch.values, 'cuda:0')
 
             ## repeat each item in conditions `n_samples` times
             conditions = apply_dict(
@@ -205,7 +206,7 @@ class Trainer(object):
             )
 
             ## [ n_samples x horizon x (action_dim + observation_dim) ]
-            samples = self.ema_model(conditions)
+            samples = self.ema_model(conditions, reward_conditions)
             trajectories = to_np(samples.trajectories)
 
             ## [ n_samples x horizon x observation_dim ]

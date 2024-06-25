@@ -10,35 +10,52 @@ class Logger:
         self.vis_freq = vis_freq
         self.max_render = max_render
 
-    def log(self, t, samples, state, rollout=None):
+    def log(self, idx, t, samples, state, rollout=None):
+
         if t % self.vis_freq != 0:
             return
 
+        if not os.path.exists(os.path.join(self.savepath, str(idx))):
+            os.makedirs(os.path.join(self.savepath, str(idx)))
+
         ## render image of plans
         self.renderer.composite(
-            os.path.join(self.savepath, f'{t}.png'),
-            samples.observations,
+            os.path.join(self.savepath, str(idx), f'{t}.png'),
+            samples.observations[idx:idx+1],
         )
 
         ## render video of plans
         self.renderer.render_plan(
-            os.path.join(self.savepath, f'{t}_plan.mp4'),
-            samples.actions[:self.max_render],
-            samples.observations[:self.max_render],
+            os.path.join(self.savepath, str(idx), f'{t}_plan.mp4'),
+            samples.actions[idx:idx+1,:self.max_render],
+            samples.observations[idx:idx+1, :self.max_render],
             state,
         )
 
         if rollout is not None:
             ## render video of rollout thus far
             self.renderer.render_rollout(
-                os.path.join(self.savepath, f'rollout.mp4'),
+                os.path.join(self.savepath, str(idx), f'rollout.mp4'),
                 rollout,
                 fps=80,
             )
 
     def finish(self, t, score, total_reward, terminal, diffusion_experiment, value_experiment):
-        json_path = os.path.join(self.savepath, 'rollout.json')
-        json_data = {'score': score, 'step': t, 'return': total_reward, 'term': terminal,
-            'epoch_diffusion': diffusion_experiment.epoch, 'epoch_value': value_experiment.epoch}
-        json.dump(json_data, open(json_path, 'w'), indent=2, sort_keys=True)
-        print(f'[ utils/logger ] Saved log to {json_path}')
+        mean_return = sum(total_reward) / len(total_reward)
+        mean_term = sum(terminal) / len(terminal)
+        if value_experiment is not None:
+            json_path = os.path.join(self.savepath, 'rollout.json')
+            json_data = {'score': score, 'step': t, 
+                         'return':total_reward, 'mean_return': mean_return, 
+                         'term': terminal, 'mean_term': mean_term,
+                'epoch_diffusion': diffusion_experiment.epoch, 'epoch_value': value_experiment.epoch}
+            json.dump(json_data, open(json_path, 'w'), indent=2, sort_keys=True)
+            print(f'[ utils/logger ] Saved log to {json_path}')
+        else:
+            json_path = os.path.join(self.savepath, 'rollout.json')
+            json_data = {'score': score, 'step': t, 
+                         'return': total_reward, 'mean_return': mean_return,
+                         'term': terminal, 'mean_term': mean_term,
+                'epoch_diffusion': diffusion_experiment.epoch}
+            json.dump(json_data, open(json_path, 'w'), indent=2, sort_keys=True)
+            print(f'[ utils/logger ] Saved log to {json_path}')

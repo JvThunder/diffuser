@@ -8,7 +8,7 @@ import diffuser.utils as utils
 from .helpers import (
     cosine_beta_schedule,
     extract,
-    apply_conditioning,
+    # apply_conditioning,
     Losses,
 )
 
@@ -17,8 +17,8 @@ Sample = namedtuple('Sample', 'trajectories values chains')
 
 
 @torch.no_grad()
-def default_sample_fn(model, x, cond, t):
-    model_mean, _, model_log_variance = model.p_mean_variance(x=x, cond=cond, t=t)
+def default_sample_fn(model, x, cond, cond_reward, t):
+    model_mean, _, model_log_variance = model.p_mean_variance(x=x, cond=cond, cond_reward=cond_reward, t=t)
     model_std = torch.exp(0.5 * model_log_variance)
 
     # no noise when t == 0
@@ -29,11 +29,11 @@ def default_sample_fn(model, x, cond, t):
     return model_mean + model_std * noise, values
 
 
-def sort_by_values(x, values):
-    inds = torch.argsort(values, descending=True)
-    x = x[inds]
-    values = values[inds]
-    return x, values
+# def sort_by_values(x, values):
+#     inds = torch.argsort(values, descending=True)
+#     x = x[inds]
+#     values = values[inds]
+#     return x, values
 
 
 def make_timesteps(batch_size, i, device):
@@ -45,12 +45,13 @@ class GaussianDiffusion(nn.Module):
     def __init__(self, model, horizon, observation_dim, action_dim, n_timesteps=1000,
         loss_type='l1', clip_denoised=False, predict_epsilon=True,
         action_weight=1.0, loss_discount=1.0, loss_weights=None,
+        guidance_weight = 0.5, p_uncond = 0.2,
     ):
         super().__init__()
         self.horizon = horizon
-        self.observation_dim = observation_dim
+        self.observation_dim = 0
         self.action_dim = action_dim
-        self.transition_dim = observation_dim + action_dim
+        self.transition_dim = action_dim
         self.model = model
 
         betas = cosine_beta_schedule(n_timesteps)
@@ -61,6 +62,7 @@ class GaussianDiffusion(nn.Module):
         self.n_timesteps = int(n_timesteps)
         self.clip_denoised = clip_denoised
         self.predict_epsilon = predict_epsilon
+        self.guidance_weight = guidance_weight
 
         self.register_buffer('betas', betas)
         self.register_buffer('alphas_cumprod', alphas_cumprod)
@@ -89,6 +91,8 @@ class GaussianDiffusion(nn.Module):
         ## get loss coefficients and initialize objective
         loss_weights = self.get_loss_weights(action_weight, loss_discount, loss_weights)
         self.loss_fn = Losses[loss_type](loss_weights, self.action_dim)
+
+        self.p_uncond = p_uncond
 
     def get_loss_weights(self, action_weight, discount, weights_dict):
         '''
@@ -143,8 +147,17 @@ class GaussianDiffusion(nn.Module):
         posterior_log_variance_clipped = extract(self.posterior_log_variance_clipped, t, x_t.shape)
         return posterior_mean, posterior_variance, posterior_log_variance_clipped
 
-    def p_mean_variance(self, x, cond, t):
-        x_recon = self.predict_start_from_noise(x, t=t, noise=self.model(x, cond, t))
+    def p_mean_variance(self, x, cond, cond_reward, t):
+        # Unconditional prediction
+        epsilon_uncond = self.model(x, cond, t, cond_reward, force_dropout=True)
+
+        # Conditional prediction
+        epsilon_cond = self.model(x, cond, t, cond_reward, use_dropout=False)
+
+        # Classifier-free guidance
+        epsilon = epsilon_uncond + self.guidance_weight * (epsilon_cond - epsilon_uncond)
+        
+        x_recon = self.predict_start_from_noise(x, t=t, noise=epsilon)
 
         if self.clip_denoised:
             x_recon.clamp_(-1., 1.)
@@ -156,41 +169,43 @@ class GaussianDiffusion(nn.Module):
         return model_mean, posterior_variance, posterior_log_variance
 
     @torch.no_grad()
-    def p_sample_loop(self, shape, cond, verbose=True, return_chain=False, sample_fn=default_sample_fn, **sample_kwargs):
+    def p_sample_loop(self, shape, cond, cond_reward, verbose=True, return_chain=False, sample_fn=default_sample_fn, **sample_kwargs):
         device = self.betas.device
 
         batch_size = shape[0]
         x = torch.randn(shape, device=device)
-        x = apply_conditioning(x, cond, self.action_dim)
+        # x = apply_conditioning(x, cond, self.action_dim)
 
         chain = [x] if return_chain else None
+        cond_reward = torch.full((batch_size,1), cond_reward[0][0], device=device, dtype=torch.float32)
 
         progress = utils.Progress(self.n_timesteps) if verbose else utils.Silent()
         for i in reversed(range(0, self.n_timesteps)):
             t = make_timesteps(batch_size, i, device)
-            x, values = sample_fn(self, x, cond, t, **sample_kwargs)
-            x = apply_conditioning(x, cond, self.action_dim)
+            x, values = sample_fn(self, x, cond, cond_reward, t)
+            # x = apply_conditioning(x, cond, self.action_dim)
 
-            progress.update({'t': i, 'vmin': values.min().item(), 'vmax': values.max().item()})
+            # progress.update({'t': i, 'vmin': values.min().item(), 'vmax': values.max().item()})
+            progress.update({'t': i})
             if return_chain: chain.append(x)
 
         progress.stamp()
 
-        x, values = sort_by_values(x, values)
+        # x, values = sort_by_values(x, values)
         if return_chain: chain = torch.stack(chain, dim=1)
         return Sample(x, values, chain)
 
     @torch.no_grad()
-    def conditional_sample(self, cond, horizon=None, **sample_kwargs):
+    def conditional_sample(self, cond, cond_reward, horizon=None, **sample_kwargs):
         '''
             conditions : [ (time, state), ... ]
         '''
         device = self.betas.device
-        batch_size = len(cond[0])
+        batch_size = len(cond)
         horizon = horizon or self.horizon
         shape = (batch_size, horizon, self.transition_dim)
 
-        return self.p_sample_loop(shape, cond, **sample_kwargs)
+        return self.p_sample_loop(shape, cond, cond_reward, **sample_kwargs)
 
     #------------------------------------------ training ------------------------------------------#
 
@@ -205,14 +220,23 @@ class GaussianDiffusion(nn.Module):
 
         return sample
 
-    def p_losses(self, x_start, cond, t):
+    def p_losses(self, x_start, cond, cond_reward, t):
         noise = torch.randn_like(x_start)
 
         x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
-        x_noisy = apply_conditioning(x_noisy, cond, self.action_dim)
+        # x_noisy = apply_conditioning(x_noisy, cond, self.action_dim)
 
-        x_recon = self.model(x_noisy, cond, t)
-        x_recon = apply_conditioning(x_recon, cond, self.action_dim)
+        # train force dropout True and False
+        train_cond = True
+        if np.random.rand() < self.p_uncond:
+            # unconditioning
+            train_cond = False
+            x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, force_dropout=True)
+        else:
+            # conditioning
+            train_cond = True
+            x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, use_dropout=False)
+        # x_recon = apply_conditioning(x_recon, cond, self.action_dim)
 
         assert noise.shape == x_recon.shape
 
@@ -221,6 +245,7 @@ class GaussianDiffusion(nn.Module):
         else:
             loss, info = self.loss_fn(x_recon, x_start)
 
+        info["train_cond"] = train_cond
         return loss, info
 
     def loss(self, x, *args):
@@ -228,23 +253,5 @@ class GaussianDiffusion(nn.Module):
         t = torch.randint(0, self.n_timesteps, (batch_size,), device=x.device).long()
         return self.p_losses(x, *args, t)
 
-    def forward(self, cond, *args, **kwargs):
-        return self.conditional_sample(cond, *args, **kwargs)
-
-
-class ValueDiffusion(GaussianDiffusion):
-
-    def p_losses(self, x_start, cond, target, t):
-        noise = torch.randn_like(x_start)
-
-        x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
-        x_noisy = apply_conditioning(x_noisy, cond, self.action_dim)
-
-        pred = self.model(x_noisy, cond, t)
-
-        loss, info = self.loss_fn(pred, target)
-        return loss, info
-
-    def forward(self, x, cond, t):
-        return self.model(x, cond, t)
-
+    def forward(self, cond, cond_reward, *args, **kwargs):
+        return self.conditional_sample(cond, cond_reward, *args, **kwargs)
