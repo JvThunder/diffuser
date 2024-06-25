@@ -18,20 +18,24 @@ args_to_watch = [
 
 logbase = 'logs'
 
+h = 32
+n_steps = 20
+d = 0.99
+
 base = {
     'diffusion': {
         ## model
         'model': 'models.TemporalUnet',
         'diffusion': 'models.GaussianDiffusion',
-        'horizon': 64,
-        'n_diffusion_steps': 20,
+        'horizon': h,
+        'n_diffusion_steps': n_steps,
         'action_weight': 10,
         'loss_weights': None,
         'loss_discount': 1,
         'predict_epsilon': False,
         'dim_mults': (1, 2, 4, 8),
         'renderer': 'utils.MuJoCoRenderer',
-        'discount': 0.99,
+        'discount': d,
         'p_uncond': 0.5,
 
         ## dataset
@@ -91,11 +95,11 @@ base = {
         'max_render': 8,
 
         ## diffusion model
-        'horizon': 64,
-        'n_diffusion_steps': 20,
+        'horizon': h,
+        'n_diffusion_steps': n_steps,
 
         ## value function
-        'discount': 0.99,
+        'discount': d,
 
         ## loading
         'diffusion_loadpath': 'f:diffusion/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
