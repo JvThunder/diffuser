@@ -69,35 +69,39 @@ class GlobalMixing(nn.Module):
         return self.to_out(out)
 
 class FiLM(nn.Module):
-    def __init__(self, in_features, cond_features):
+    def __init__(self, in_channels, out_channels):
         super(FiLM, self).__init__()
-        self.gamma_transform = nn.Linear(cond_features, in_features)
-        self.beta_transform = nn.Linear(cond_features, in_features)
+        self.gamma_transform = nn.Linear(in_channels, out_channels)
+        self.beta_transform = nn.Linear(in_channels, out_channels)
+        self.out_channels = out_channels
 
     def forward(self, x, t):
+        # Transform t to produce gamma and beta
         gamma = self.gamma_transform(t)
         beta = self.beta_transform(t)
-        return gamma * x + beta 
+        # Reshape gamma and beta to match the spatial dimensions of x
+        gamma = gamma.view(-1, self.out_channels, 1)  # Reshape to [batch, channels, 1]
+        beta = beta.view(-1, self.out_channels, 1)  # Reshape to [batch, channels, 1]
+        return gamma * x + beta
 
 class ResidualTemporalBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, embed_dim, kernel_size, mish):
+    def __init__(self, in_channels, out_channels, embed_dim, kernel_size, mish, horizon):
         super().__init__()
         self.conv1 = nn.Conv1d(in_channels, out_channels, kernel_size, padding=kernel_size//2)
         self.act = nn.Mish() if mish else nn.SiLU()
         self.conv2 = nn.Conv1d(out_channels, out_channels, kernel_size, padding=kernel_size//2)
-        self.film1 = FiLM(out_channels, embed_dim)
-        self.film2 = FiLM(out_channels, embed_dim)
+        self.film1 = FiLM(embed_dim, out_channels)
+        self.film2 = FiLM(embed_dim, out_channels)
+        self.residual_conv = nn.Conv1d(in_channels, out_channels, 1) \
+        if in_channels != out_channels else nn.Identity()
     
     def forward(self, x, t):
-        identity = x
         out = self.conv1(x)
         out = self.film1(out, t)  # Apply FiLM with `t`
         out = self.act(out)
         out = self.conv2(out)
         out = self.film2(out, t)  # Apply FiLM with `t` again
-        out += identity  # Skip connection
-        out = self.act(out)
-        return out
+        return out + self.residual_conv(x)
 
 class TemporalUnet(nn.Module):
 
@@ -148,18 +152,15 @@ class TemporalUnet(nn.Module):
                         nn.Linear(dim * 4, dim),
                     )
 
-        if self.returns_condition:
-            self.returns_mlp = nn.Sequential(
-                        nn.Linear(1, dim),
-                        act_fn,
-                        nn.Linear(dim, dim * 4),
-                        act_fn,
-                        nn.Linear(dim * 4, dim),
-                    )
-            self.mask_dist = Bernoulli(probs=1-self.condition_dropout)
-            embed_dim = 3*dim
-        else:
-            embed_dim = 2*dim
+        self.returns_mlp = nn.Sequential(
+                    nn.Linear(1, dim),
+                    act_fn,
+                    nn.Linear(dim, dim * 4),
+                    act_fn,
+                    nn.Linear(dim * 4, dim),
+                )
+        self.mask_dist = Bernoulli(probs=1-self.condition_dropout)
+        embed_dim = 3*dim
 
         self.downs = nn.ModuleList([])
         self.ups = nn.ModuleList([])
