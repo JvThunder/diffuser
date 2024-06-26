@@ -8,6 +8,7 @@ import diffuser.utils as utils
 class Parser(utils.Parser):
     dataset: str = 'hopper-medium-expert-v2'
     config: str = 'config.locomotion'
+    horizon: int = 16
 
 args = Parser().parse_args('diffusion')
 

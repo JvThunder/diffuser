@@ -68,41 +68,36 @@ class GlobalMixing(nn.Module):
         out = rearrange(out, 'b heads c (h w) -> b (heads c) h w', heads=self.heads, h=h, w=w)
         return self.to_out(out)
 
-class ResidualTemporalBlock(nn.Module):
-
-    def __init__(self, inp_channels, out_channels, embed_dim, horizon, kernel_size=5, mish=True):
-        super().__init__()
-
-        self.blocks = nn.ModuleList([
-            Conv1dBlock(inp_channels, out_channels, kernel_size, mish),
-            Conv1dBlock(out_channels, out_channels, kernel_size, mish),
-        ])
-
-        if mish:
-            act_fn = nn.Mish()
-        else:
-            act_fn = nn.SiLU()
-
-        self.time_mlp = nn.Sequential(
-            act_fn,
-            nn.Linear(embed_dim, out_channels),
-            Rearrange('batch t -> batch t 1'),
-        )
-
-        self.residual_conv = nn.Conv1d(inp_channels, out_channels, 1) \
-            if inp_channels != out_channels else nn.Identity()
+class FiLM(nn.Module):
+    def __init__(self, in_features, cond_features):
+        super(FiLM, self).__init__()
+        self.gamma_transform = nn.Linear(cond_features, in_features)
+        self.beta_transform = nn.Linear(cond_features, in_features)
 
     def forward(self, x, t):
-        '''
-            x : [ batch_size x inp_channels x horizon ]
-            t : [ batch_size x embed_dim ]
-            returns:
-            out : [ batch_size x out_channels x horizon ]
-        '''
-        out = self.blocks[0](x) + self.time_mlp(t)
-        out = self.blocks[1](out)
+        gamma = self.gamma_transform(t)
+        beta = self.beta_transform(t)
+        return gamma * x + beta 
 
-        return out + self.residual_conv(x)
+class ResidualTemporalBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, embed_dim, kernel_size, mish):
+        super().__init__()
+        self.conv1 = nn.Conv1d(in_channels, out_channels, kernel_size, padding=kernel_size//2)
+        self.act = nn.Mish() if mish else nn.SiLU()
+        self.conv2 = nn.Conv1d(out_channels, out_channels, kernel_size, padding=kernel_size//2)
+        self.film1 = FiLM(out_channels, embed_dim)
+        self.film2 = FiLM(out_channels, embed_dim)
+    
+    def forward(self, x, t):
+        identity = x
+        out = self.conv1(x)
+        out = self.film1(out, t)  # Apply FiLM with `t`
+        out = self.act(out)
+        out = self.conv2(out)
+        out = self.film2(out, t)  # Apply FiLM with `t` again
+        out += identity  # Skip connection
+        out = self.act(out)
+        return out
 
 class TemporalUnet(nn.Module):
 
