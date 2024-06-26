@@ -10,6 +10,8 @@ docker run -it --rm --gpus all \
 # Train the model
 python scripts/train.py --dataset walker2d-medium-replay-v2 --logbase logs/cond_a --horizon 32
 
+python scripts/train_mult_horizons.py
+
 # Evaluate the model
 python scripts/plan_guided_parallel.py --dataset walker2d-medium-replay-v2 --logbase logs/cond_a --guidance_weight 10
 
