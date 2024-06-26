@@ -3,7 +3,7 @@ import json
 
 # List of guidance weights to test
 guidance_weights = [0.5, 0.7, 1.5, 2.0, 4.0, 6.0]
-horizons = [8, 16, 32, 64]
+horizons = [32, 64]
 dataset = 'walker2d-medium-replay-v2'
 logbase = 'logs/cond_a'
 config_path = 'config/locomotion.py'
