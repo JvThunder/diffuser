@@ -52,12 +52,10 @@ policy_config = utils.Config(
     preprocess_fns=args.preprocess_fns,
     verbose=False,
     guidance_weight=args.guidance_weight,
-    ## sampling kwargs
-    # scale=args.scale,
-    # sample_fn=sampling.n_step_guided_p_sample,
-    # n_guide_steps=args.n_guide_steps,
-    # t_stopgrad=args.t_stopgrad,
-    # scale_grad_by_std=args.scale_grad_by_std,
+
+    horizon=args.horizon,
+    m=args.m,
+    
 )
 
 logger = logger_config()

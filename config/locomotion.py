@@ -101,6 +101,9 @@ base = {
         ## value function
         'discount': d,
 
+        ## policy
+        'm': 1,
+
         ## loading
         # 'diffusion_loadpath': 'f:diffusion/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
         # 'value_loadpath': 'f:values/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
