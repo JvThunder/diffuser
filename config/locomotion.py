@@ -95,14 +95,14 @@ base = {
         'max_render': 8,
 
         ## diffusion model
-        'horizon': h,
+        # 'horizon': h,
         'n_diffusion_steps': n_steps,
 
         ## value function
         'discount': d,
 
         ## loading
-        'diffusion_loadpath': 'f:diffusion/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
+        # 'diffusion_loadpath': 'f:diffusion/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
         # 'value_loadpath': 'f:values/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
 
         'diffusion_epoch': 'latest',

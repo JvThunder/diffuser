@@ -16,3 +16,5 @@ python scripts/train_mult_horizons.py
 python scripts/plan_guided_parallel.py --dataset walker2d-medium-replay-v2 --logbase logs/cond_a --guidance_weight 10
 
 python scripts/eval_mult_weights.py
+
+python scripts/train_eval_mult.py
