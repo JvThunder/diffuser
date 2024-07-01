@@ -60,8 +60,12 @@ class GuidedPolicy:
         curr_action = np.array(actions[:, 0])
         self.action_q.appendleft(curr_action)
         # do weighted average using w_i
+        # print("self.action_q: ", self.action_q)
+        # print("self.w_i: ", self.w_i)
         first_actions = np.stack(list(self.action_q), axis=1)
         first_actions = np.sum(first_actions * self.w_i[::,:first_actions.shape[1],::] / self.w_i[::,:first_actions.shape[1],::].sum(axis=1), axis=1)
+        # print("first_actions: ", first_actions)
+        # print("first_actions.shape: ", first_actions.shape)
 
         # normed_observations = trajectories[:, :, self.action_dim:]
         # observations = self.normalizer.unnormalize(normed_observations, 'observations')
