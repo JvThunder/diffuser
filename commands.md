@@ -8,12 +8,12 @@ docker run -it --rm --gpus all \
     diffuser /bin/bash -c "cd /home/code && /bin/bash"
 
 # Train the model
-python scripts/train.py --dataset walker2d-medium-replay-v2 --logbase logs/cond_a --horizon 32
+python scripts/train.py --dataset hopper-medium-replay-v2 --logbase logs/cond_a --horizon 32
 
 python scripts/train_mult_horizons.py
 
 # Evaluate the model
-python scripts/plan_guided_parallel.py --dataset walker2d-medium-replay-v2 --logbase logs/cond_a --guidance_weight 10
+python scripts/plan_guided_parallel.py --dataset hopper-medium-replay-v2 --logbase logs/cond_a 
 
 python scripts/eval_mult_weights.py
 

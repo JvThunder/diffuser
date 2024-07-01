@@ -29,11 +29,10 @@ class GuidedPolicy:
 
         # temporal ensemble
         self.m = m
-        self.w_i = torch.exp(-torch.arange(horizon, dtype=torch.float32) * self.m) # wi = exp(-m * i)
+        self.w_i = np.exp(-np.arange(horizon, dtype=np.float32) * self.m) # wi = exp(-m * i)
         self.w_i = self.w_i / self.w_i.sum()
+        self.w_i = self.w_i.reshape(1, -1, 1)
         self.action_q = deque(maxlen=self.horizon)
-        for _ in range(self.horizon):
-            self.action_q.appendleft(torch.zeros(self.action_dim))
 
     def __call__(self, conditions, verbose=True):
         batch_size = conditions[0].shape[0]
@@ -54,18 +53,15 @@ class GuidedPolicy:
         # last dim: [self.action_dim, self.observation_dim, self.action_dim, ... self.observation_dim] 
         actions = trajectories[:, :, :self.action_dim]
         # clip to [-3, 3]
-        actions = np.clip(actions, -3, 3)
+        # actions = np.clip(actions, -3, 3)
         actions = self.normalizer.unnormalize(actions, 'actions')
 
         ## extract first action
-        curr_action = actions[:, 0]
+        curr_action = np.array(actions[:, 0])
         self.action_q.appendleft(curr_action)
         # do weighted average using w_i
-        print("self.action_q: ", self.action_q)
-        print("self.w_i: ", self.w_i)
-        first_actions = torch.stack(list(self.action_q), dim=1)
-        first_actions = torch.sum(first_actions * self.w_i, dim=1)
-        print("first_actions: ", first_actions)
+        first_actions = np.stack(list(self.action_q), axis=1)
+        first_actions = np.sum(first_actions * self.w_i[::,:first_actions.shape[1],::] / self.w_i[::,:first_actions.shape[1],::].sum(axis=1), axis=1)
 
         # normed_observations = trajectories[:, :, self.action_dim:]
         # observations = self.normalizer.unnormalize(normed_observations, 'observations')
