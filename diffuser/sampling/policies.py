@@ -3,6 +3,7 @@ import torch
 import einops
 import pdb
 import numpy as np
+from collections import deque
 
 import diffuser.utils as utils
 from diffuser.datasets.preprocessing import get_policy_preprocess_fn
@@ -13,7 +14,7 @@ Trajectories = namedtuple('Trajectories', 'actions observations values')
 
 class GuidedPolicy:
 
-    def __init__(self, guide, diffusion_model, normalizer, preprocess_fns, guidance_weight=0.5, discount=0.99, **sample_kwargs):
+    def __init__(self, guide, diffusion_model, normalizer, preprocess_fns, guidance_weight=0.5, discount=0.99, horizon=32, m, **sample_kwargs):
         self.guide = guide
         self.diffusion_model = diffusion_model
         self.diffusion_model.guidance_weight = guidance_weight
@@ -24,6 +25,15 @@ class GuidedPolicy:
         self.preprocess_fn = get_policy_preprocess_fn(preprocess_fns)
         self.sample_kwargs = sample_kwargs
         self.discount = discount
+        self.horizon = horizon
+
+        # temporal ensemble
+        self.m = m
+        self.w_i = torch.exp(-torch.arange(horizon, dtype=torch.float32) * self.m) # wi = exp(-m * i)
+        self.w_i = self.w_i / self.w_i.sum()
+        self.action_q = deque(maxlen=self.horizon)
+        for _ in range(self.horizon):
+            self.action_q.appendleft(torch.zeros(self.action_dim))
 
     def __call__(self, conditions, verbose=True):
         batch_size = conditions[0].shape[0]
@@ -48,7 +58,14 @@ class GuidedPolicy:
         actions = self.normalizer.unnormalize(actions, 'actions')
 
         ## extract first action
-        first_actions = actions[:, 0]
+        curr_action = actions[:, 0]
+        self.action_q.appendleft(curr_action)
+        # do weighted average using w_i
+        print("self.action_q: ", self.action_q)
+        print("self.w_i: ", self.w_i)
+        first_actions = torch.stack(list(self.action_q), dim=1)
+        first_actions = torch.sum(first_actions * self.w_i, dim=1)
+        print("first_actions: ", first_actions)
 
         # normed_observations = trajectories[:, :, self.action_dim:]
         # observations = self.normalizer.unnormalize(normed_observations, 'observations')
