@@ -1,7 +1,7 @@
 import subprocess
 
 # List of guidance weights to test
-weight = 2.0
+w = 2.0
 horizon = 32
 m_list = [0.1, 0.3, 0.5, 1.0, 2.0]
 dataset = 'hopper-medium-replay-v2'
@@ -14,7 +14,7 @@ for m in m_list:
         'python', 'scripts/plan_guided_parallel.py', 
         '--dataset', dataset, 
         '--logbase', logbase,
-        '--guidance_weight', str(weight),
+        '--guidance_weight', str(w),
         '--horizon', str(horizon),
         '--m', str(m)
     ])
