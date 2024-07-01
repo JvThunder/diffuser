@@ -26,13 +26,13 @@ class GuidedPolicy:
         self.sample_kwargs = sample_kwargs
         self.discount = discount
         self.horizon = horizon
+        self.buffers = deque(maxlen=horizon) # buffer for storing actions
 
         # temporal ensemble
         self.m = m
         self.w_i = np.exp(-np.arange(horizon, dtype=np.float32) * self.m) # wi = exp(-m * i)
-        self.w_i = self.w_i / self.w_i.sum()
         self.w_i = self.w_i.reshape(1, -1, 1)
-        self.action_q = deque(maxlen=self.horizon)
+        
 
     def __call__(self, conditions, verbose=True):
         batch_size = conditions[0].shape[0]
@@ -55,17 +55,15 @@ class GuidedPolicy:
         # clip to [-3, 3]
         # actions = np.clip(actions, -3, 3)
         actions = self.normalizer.unnormalize(actions, 'actions')
+        # action: [batch_size x horizon x action_dim]
 
-        ## extract first action
-        curr_action = np.array(actions[:, 0])
-        self.action_q.appendleft(curr_action)
-        # do weighted average using w_i
-        # print("self.action_q: ", self.action_q)
-        # print("self.w_i: ", self.w_i)
-        first_actions = np.stack(list(self.action_q), axis=1)
-        first_actions = np.sum(first_actions * self.w_i[::,:first_actions.shape[1],::] / self.w_i[::,:first_actions.shape[1],::].sum(axis=1), axis=1)
-        # print("first_actions: ", first_actions)
-        # print("first_actions.shape: ", first_actions.shape)
+        ## temporal ensemble
+        self.buffers.appendleft(actions)
+        action_list = []
+        for i in range(len(self.buffers)):
+            action_list.append(self.buffers[i][::, i])
+        first_actions = np.stack(action_list, axis=1)
+        first_actions = np.sum(first_actions * self.w_i[::, :first_actions.shape[1],::] / self.w_i[::,:first_actions.shape[1],::].sum(axis=1), axis=1)
 
         # normed_observations = trajectories[:, :, self.action_dim:]
         # observations = self.normalizer.unnormalize(normed_observations, 'observations')

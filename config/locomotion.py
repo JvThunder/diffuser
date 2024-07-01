@@ -11,9 +11,9 @@ args_to_watch = [
     ('prefix', ''),
     ('horizon', 'H'),
     ('n_diffusion_steps', 'T'),
-    ## value kwargs
     ('discount', 'd'),
     ('guidance_weight', 'w'),
+    ('m', 'm'),
 ]
 
 logbase = 'logs'
@@ -102,7 +102,7 @@ base = {
         'discount': d,
 
         ## policy
-        'm': 1,
+        # 'm': 0.7,
 
         ## loading
         # 'diffusion_loadpath': 'f:diffusion/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',

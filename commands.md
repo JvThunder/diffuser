@@ -18,3 +18,5 @@ python scripts/plan_guided_parallel.py --dataset hopper-medium-replay-v2 --logba
 python scripts/eval_mult_weights.py
 
 python scripts/train_eval_mult.py
+
+python scripts/eval_mult_m.py
