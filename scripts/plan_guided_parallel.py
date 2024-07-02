@@ -14,7 +14,8 @@ class Parser(utils.Parser):
     config: str = 'config.locomotion'
     guidance_weight: float = 1.2
     horizon: int = 32
-    m: float = 0.5
+    m_temp: float = -1.0
+    film: bool = False
 
 args = Parser().parse_args('plan')
 args.diffusion_loadpath = f'diffusion/defaults_H{args.horizon}_T{args.n_diffusion_steps}_d{args.discount}'

@@ -149,7 +149,7 @@ class GaussianDiffusion(nn.Module):
 
     def p_mean_variance(self, x, cond, cond_reward, t):
         # Unconditional prediction
-        epsilon_uncond = self.model(x, cond, t, cond_reward, force_dropout=True)
+        epsilon_uncond = self.model(x, cond, t, cond_reward, use_dropout=True)
 
         # Conditional prediction
         epsilon_cond = self.model(x, cond, t, cond_reward, use_dropout=False)
@@ -231,7 +231,7 @@ class GaussianDiffusion(nn.Module):
         if np.random.rand() < self.p_uncond:
             # unconditioning
             train_cond = False
-            x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, force_dropout=True)
+            x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, use_dropout=True)
         else:
             # conditioning
             train_cond = True

@@ -9,6 +9,7 @@ class Parser(utils.Parser):
     dataset: str = 'hopper-medium-expert-v2'
     config: str = 'config.locomotion'
     horizon: int = 16
+    film: bool = False
 
 args = Parser().parse_args('diffusion')
 
@@ -55,6 +56,7 @@ model_config = utils.Config(
     dim_mults=args.dim_mults,
     device=args.device,
     returns_condition=True,
+    film=args.film,
 )
 
 diffusion_config = utils.Config(

@@ -85,23 +85,35 @@ class FiLM(nn.Module):
         return gamma * x + beta
 
 class ResidualTemporalBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, embed_dim, kernel_size, mish, horizon):
+    def __init__(self, in_channels, out_channels, embed_dim, kernel_size, mish, film=False):
         super().__init__()
-        self.conv1 = nn.Conv1d(in_channels, out_channels, kernel_size, padding=kernel_size//2)
+        self.film = film
+        self.conv1 = Conv1dBlock(in_channels, out_channels, kernel_size, padding=kernel_size//2)
         self.act = nn.Mish() if mish else nn.SiLU()
-        self.conv2 = nn.Conv1d(out_channels, out_channels, kernel_size, padding=kernel_size//2)
+        self.conv2 = Conv1dBlock(out_channels, out_channels, kernel_size, padding=kernel_size//2)
         self.film1 = FiLM(embed_dim, out_channels)
         self.film2 = FiLM(embed_dim, out_channels)
         self.residual_conv = nn.Conv1d(in_channels, out_channels, 1) \
         if in_channels != out_channels else nn.Identity()
+
+        self.time_mlp = nn.Sequential(
+            self.act,
+            nn.Linear(embed_dim, out_channels),
+            Rearrange('batch t -> batch t 1'),
+        )    
     
     def forward(self, x, t):
-        out = self.conv1(x)
-        out = self.film1(out, t)  # Apply FiLM with `t`
-        out = self.act(out)
-        out = self.conv2(out)
-        out = self.film2(out, t)  # Apply FiLM with `t` again
-        return out + self.residual_conv(x)
+        if self.film:
+            out = self.conv1(x)
+            out = self.film1(out, t)  # Apply FiLM with `t`
+            out = self.act(out)
+            out = self.conv2(out)
+            out = self.film2(out, t)  # Apply FiLM with `t` again
+            return out + self.residual_conv(x)
+        else:
+            out = self.conv1(x) + self.time_mlp(t)
+            out = self.conv2(out)
+            return out + self.residual_conv(x)
 
 class TemporalUnet(nn.Module):
 
@@ -116,6 +128,7 @@ class TemporalUnet(nn.Module):
         condition_dropout=0.1,
         calc_energy=False,
         kernel_size=5,
+        film=False,
     ):
         super().__init__()
 
@@ -171,8 +184,8 @@ class TemporalUnet(nn.Module):
             is_last = ind >= (num_resolutions - 1)
 
             self.downs.append(nn.ModuleList([
-                ResidualTemporalBlock(dim_in, dim_out, embed_dim=embed_dim, horizon=horizon, kernel_size=kernel_size, mish=mish),
-                ResidualTemporalBlock(dim_out, dim_out, embed_dim=embed_dim, horizon=horizon, kernel_size=kernel_size, mish=mish),
+                ResidualTemporalBlock(dim_in, dim_out, embed_dim=embed_dim, kernel_size=kernel_size, mish=mish, film=film),
+                ResidualTemporalBlock(dim_out, dim_out, embed_dim=embed_dim, kernel_size=kernel_size, mish=mish, film=film),
                 Downsample1d(dim_out) if not is_last else nn.Identity()
             ]))
 
@@ -180,15 +193,15 @@ class TemporalUnet(nn.Module):
                 horizon = horizon // 2
 
         mid_dim = dims[-1]
-        self.mid_block1 = ResidualTemporalBlock(mid_dim, mid_dim, embed_dim=embed_dim, horizon=horizon, kernel_size=kernel_size, mish=mish)
-        self.mid_block2 = ResidualTemporalBlock(mid_dim, mid_dim, embed_dim=embed_dim, horizon=horizon, kernel_size=kernel_size, mish=mish)
+        self.mid_block1 = ResidualTemporalBlock(mid_dim, mid_dim, embed_dim=embed_dim, kernel_size=kernel_size, mish=mish, film=film)
+        self.mid_block2 = ResidualTemporalBlock(mid_dim, mid_dim, embed_dim=embed_dim, kernel_size=kernel_size, mish=mish, film=film)
 
         for ind, (dim_in, dim_out) in enumerate(reversed(in_out[1:])):
             is_last = ind >= (num_resolutions - 1)
 
             self.ups.append(nn.ModuleList([
-                ResidualTemporalBlock(dim_out * 2, dim_in, embed_dim=embed_dim, horizon=horizon, kernel_size=kernel_size, mish=mish),
-                ResidualTemporalBlock(dim_in, dim_in, embed_dim=embed_dim, horizon=horizon, kernel_size=kernel_size, mish=mish),
+                ResidualTemporalBlock(dim_out * 2, dim_in, embed_dim=embed_dim, kernel_size=kernel_size, mish=mish, film=film),
+                ResidualTemporalBlock(dim_in, dim_in, embed_dim=embed_dim, kernel_size=kernel_size, mish=mish, film=film),
                 Upsample1d(dim_in) if not is_last else nn.Identity()
             ]))
 
@@ -200,7 +213,7 @@ class TemporalUnet(nn.Module):
             nn.Conv1d(dim, transition_dim, 1),
         )
 
-    def forward(self, x, cond, time, returns, use_dropout=True, force_dropout=False):
+    def forward(self, x, cond, time, returns, use_dropout=False, force_dropout=False):
         '''
             x : [ batch x horizon x transition ]
             returns : [batch x horizon]

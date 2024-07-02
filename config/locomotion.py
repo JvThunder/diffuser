@@ -13,12 +13,12 @@ args_to_watch = [
     ('n_diffusion_steps', 'T'),
     ('discount', 'd'),
     ('guidance_weight', 'w'),
-    ('m', 'm'),
+    ('use_film', 'f'),
+    ('m_temp', 'm'),
 ]
 
 logbase = 'logs'
 
-h = 32
 n_steps = 20
 d = 0.99
 
@@ -100,9 +100,6 @@ base = {
 
         ## value function
         'discount': d,
-
-        ## policy
-        # 'm': 0.7,
 
         ## loading
         # 'diffusion_loadpath': 'f:diffusion/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
