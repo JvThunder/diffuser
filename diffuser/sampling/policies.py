@@ -58,12 +58,15 @@ class GuidedPolicy:
         # action: [batch_size x horizon x action_dim]
 
         ## temporal ensemble
-        self.buffers.appendleft(actions)
-        action_list = []
-        for i in range(len(self.buffers)):
-            action_list.append(self.buffers[i][::, i])
-        first_actions = np.stack(action_list, axis=1)
-        first_actions = np.sum(first_actions * self.w_i[::, :first_actions.shape[1],::] / self.w_i[::,:first_actions.shape[1],::].sum(axis=1), axis=1)
+        if self.m > 0:
+            self.buffers.appendleft(actions)
+            action_list = []
+            for i in range(len(self.buffers)):
+                action_list.append(self.buffers[i][::, i])
+            first_actions = np.stack(action_list, axis=1)
+            first_actions = np.sum(first_actions * self.w_i[::, :first_actions.shape[1],::] / self.w_i[::,:first_actions.shape[1],::].sum(axis=1), axis=1)
+        else:
+            first_actions = actions[:, 0]
 
         # normed_observations = trajectories[:, :, self.action_dim:]
         # observations = self.normalizer.unnormalize(normed_observations, 'observations')
