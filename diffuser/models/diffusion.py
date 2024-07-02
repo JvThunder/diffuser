@@ -45,7 +45,7 @@ class GaussianDiffusion(nn.Module):
     def __init__(self, model, horizon, observation_dim, action_dim, n_timesteps=1000,
         loss_type='l1', clip_denoised=False, predict_epsilon=True,
         action_weight=1.0, loss_discount=1.0, loss_weights=None,
-        guidance_weight = 0.5, p_uncond = 0.2,
+        guidance_weight = 0.5
     ):
         super().__init__()
         self.horizon = horizon
@@ -91,8 +91,6 @@ class GaussianDiffusion(nn.Module):
         ## get loss coefficients and initialize objective
         loss_weights = self.get_loss_weights(action_weight, loss_discount, loss_weights)
         self.loss_fn = Losses[loss_type](loss_weights, self.action_dim)
-
-        self.p_uncond = p_uncond
 
     def get_loss_weights(self, action_weight, discount, weights_dict):
         '''
@@ -222,30 +220,14 @@ class GaussianDiffusion(nn.Module):
 
     def p_losses(self, x_start, cond, cond_reward, t):
         noise = torch.randn_like(x_start)
-
         x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
-        # x_noisy = apply_conditioning(x_noisy, cond, self.action_dim)
-
-        # train force dropout True and False
-        train_cond = True
-        if np.random.rand() < self.p_uncond:
-            # unconditioning
-            train_cond = False
-            x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, force_dropout=True)
-        else:
-            # conditioning
-            train_cond = True
-            x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, force_dropout=False)
-        # x_recon = apply_conditioning(x_recon, cond, self.action_dim)
-
+        x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, use_dropout=True)
         assert noise.shape == x_recon.shape
 
         if self.predict_epsilon:
             loss, info = self.loss_fn(x_recon, noise)
         else:
             loss, info = self.loss_fn(x_recon, x_start)
-
-        info["train_cond"] = train_cond
         return loss, info
 
     def loss(self, x, *args):

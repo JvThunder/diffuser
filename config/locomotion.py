@@ -36,7 +36,6 @@ base = {
         'dim_mults': (1, 2, 4, 8),
         'renderer': 'utils.MuJoCoRenderer',
         'discount': d,
-        'p_uncond': 0.25,
 
         ## dataset
         # 'loader': 'datasets.SequenceDataset',
