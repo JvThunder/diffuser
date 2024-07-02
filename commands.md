@@ -10,7 +10,7 @@ docker run -it --rm --gpus all \
 # Train the model
 python scripts/train.py --dataset hopper-medium-replay-v2 --logbase logs/cond_a
 
-python scripts/train_mult_horizons.py
+python scripts/train_mult.py
 
 # Evaluate the model
 python scripts/plan_guided_parallel.py --dataset hopper-medium-replay-v2 --logbase logs/cond_a
