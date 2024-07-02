@@ -149,10 +149,10 @@ class GaussianDiffusion(nn.Module):
 
     def p_mean_variance(self, x, cond, cond_reward, t):
         # Unconditional prediction
-        epsilon_uncond = self.model(x, cond, t, cond_reward, use_dropout=True)
+        epsilon_uncond = self.model(x, cond, t, cond_reward, force_dropout=True)
 
         # Conditional prediction
-        epsilon_cond = self.model(x, cond, t, cond_reward, use_dropout=False)
+        epsilon_cond = self.model(x, cond, t, cond_reward, force_dropout=False)
 
         # Classifier-free guidance
         epsilon = epsilon_uncond + self.guidance_weight * (epsilon_cond - epsilon_uncond)
@@ -231,11 +231,11 @@ class GaussianDiffusion(nn.Module):
         if np.random.rand() < self.p_uncond:
             # unconditioning
             train_cond = False
-            x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, use_dropout=True)
+            x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, force_dropout=True)
         else:
             # conditioning
             train_cond = True
-            x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, use_dropout=False)
+            x_recon = self.model(x=x_noisy, cond=cond, time=t, returns=cond_reward, force_dropout=False)
         # x_recon = apply_conditioning(x_recon, cond, self.action_dim)
 
         assert noise.shape == x_recon.shape

@@ -9,6 +9,7 @@ class Parser(utils.Parser):
     dataset: str = 'hopper-medium-expert-v2'
     config: str = 'config.locomotion'
     horizon: int = 16
+    n_diffusion_steps: int = 10
     film: bool = False
 
 args = Parser().parse_args('diffusion')

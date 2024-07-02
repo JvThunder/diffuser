@@ -19,7 +19,7 @@ args_to_watch = [
 
 logbase = 'logs'
 
-n_steps = 20
+# n_steps = 20
 d = 0.99
 
 base = {
@@ -28,7 +28,7 @@ base = {
         'model': 'models.TemporalUnet',
         'diffusion': 'models.GaussianDiffusion',
         # 'horizon': h,
-        'n_diffusion_steps': n_steps,
+        # 'n_diffusion_steps': n_steps,
         'action_weight': 10,
         'loss_weights': None,
         'loss_discount': 1,
@@ -96,7 +96,7 @@ base = {
 
         ## diffusion model
         # 'horizon': h,
-        'n_diffusion_steps': n_steps,
+        # 'n_diffusion_steps': n_steps,
 
         ## value function
         'discount': d,

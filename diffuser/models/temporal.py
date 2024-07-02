@@ -88,9 +88,9 @@ class ResidualTemporalBlock(nn.Module):
     def __init__(self, in_channels, out_channels, embed_dim, kernel_size, mish, film=False):
         super().__init__()
         self.film = film
-        self.conv1 = Conv1dBlock(in_channels, out_channels, kernel_size, padding=kernel_size//2)
+        self.conv1 = Conv1dBlock(in_channels, out_channels, kernel_size)
         self.act = nn.Mish() if mish else nn.SiLU()
-        self.conv2 = Conv1dBlock(out_channels, out_channels, kernel_size, padding=kernel_size//2)
+        self.conv2 = Conv1dBlock(out_channels, out_channels, kernel_size)
         self.film1 = FiLM(embed_dim, out_channels)
         self.film2 = FiLM(embed_dim, out_channels)
         self.residual_conv = nn.Conv1d(in_channels, out_channels, 1) \
