@@ -1,20 +1,21 @@
 import subprocess
+config_path = 'config/locomotion.py'
 
-# List of guidance weights to test
-horizons = [16, 32, 64]
+# Define the dataset & logbase dir
 dataset = 'hopper-medium-expert-v2'
 logbase = 'logs/cond_a'
-config_path = 'config/locomotion.py'
+
+# Define the training hyperparams
+horizons = [16, 32, 64]
 
 # Iterate over the guidance weights
 for horizon in horizons:
     subprocess.run(['python', 'scripts/train.py', 
                     '--dataset', dataset, 
-                    '--logbase', logbase + '/film',
+                    '--logbase', logbase + '_film',
                     '--horizon', str(horizon),
                     '--film'])
     subprocess.run(['python', 'scripts/train.py', 
                     '--dataset', dataset, 
-                    '--logbase', logbase + '/no_film',
-                    '--horizon', str(horizon),
-                    '--film'])
+                    '--logbase', logbase + '_nofilm',
+                    '--horizon', str(horizon)])
