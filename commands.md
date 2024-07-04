@@ -19,4 +19,4 @@ python scripts/eval_mult_weights.py
 
 python scripts/train_eval_mult.py
 
-python scripts/eval_mult_m.py
+python scripts/eval_mult.py

@@ -15,6 +15,7 @@ class Parser(utils.Parser):
     guidance_weight: float = 1.2
     horizon: int = 32
     m_temp: float = -1.0
+    n_diffusion_steps: int = 20
     film: bool = False
 
 args = Parser().parse_args('plan')
@@ -56,7 +57,7 @@ policy_config = utils.Config(
     guidance_weight=args.guidance_weight,
 
     horizon=args.horizon,
-    m=args.m,
+    m=args.m_temp,
     
 )
 
