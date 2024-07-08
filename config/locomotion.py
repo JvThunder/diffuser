@@ -11,9 +11,7 @@ args_to_watch = [
     ('prefix', ''),
     ('horizon', 'H'),
     ('n_diffusion_steps', 'T'),
-    ('discount', 'd'),
     ('guidance_weight', 'w'),
-    ('use_film', 'f'),
     ('m_temp', 'm'),
 ]
 
@@ -125,7 +123,7 @@ hopper_medium_expert_v2 = {
 
 halfcheetah_medium_replay_v2 = halfcheetah_medium_v2 = halfcheetah_medium_expert_v2 = {
     'diffusion': {
-        'horizon': 4,
+        # 'horizon': 4,
         'dim_mults': (1, 4, 8),
         'attention': True,
     },
@@ -134,7 +132,7 @@ halfcheetah_medium_replay_v2 = halfcheetah_medium_v2 = halfcheetah_medium_expert
         'dim_mults': (1, 4, 8),
     },
     'plan': {
-        'horizon': 4,
+        # 'horizon': 4,
         'scale': 0.001,
         't_stopgrad': 4,
     },
