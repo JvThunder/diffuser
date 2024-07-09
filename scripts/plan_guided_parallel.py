@@ -10,14 +10,15 @@ import numpy as np
 #-----------------------------------------------------------------------------#
 
 class Parser(utils.Parser):
-    dataset: str = 'walker2d-medium-replay-v2'
     config: str = 'config.locomotion'
+    dataset: str = 'hopper-medium-expert-v2'
     guidance_weight: float = 0.5
-    horizon: int = 4
+    horizon: int = 16
     m_temp: float = -1.0
     n_diffusion_steps: int = 20
     film: bool = False
     warm_starting: bool = False
+    render: bool = False
 
 args = Parser().parse_args('plan')
 args.diffusion_loadpath = f'diffusion/defaults_H{args.horizon}_T{args.n_diffusion_steps}'
@@ -106,11 +107,10 @@ for t in range(args.max_episode_length):
             flush=True,
         )
 
-        ## update rollout observations
-        rollouts.append(next_observation.copy())
-
-        ## render every `args.vis_freq` steps
-        # logger.log(i, t, samples, state, rollouts[i])
+        ## render rollout thus far
+        if args.render:
+            if not dones[i]: rollouts[i].append(next_observation.copy())
+            if i < 5: logger.log(i, t, samples, state, rollouts[i])
 
     next_observation = np.stack(next_obs_list, axis=0)
     observation = next_observation

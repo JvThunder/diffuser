@@ -26,7 +26,7 @@ class GuidedPolicy:
         self.sample_kwargs = sample_kwargs
         self.discount = discount
         self.horizon = horizon
-        self.buffers = deque(maxlen=horizon) # buffer for storing actions
+        self.buffers = deque(maxlen=4) # buffer for storing actions
 
         # temporal ensemble
         self.m = m

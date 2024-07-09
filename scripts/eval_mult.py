@@ -14,7 +14,7 @@ horizon_list = [16, 32]
 n_diffusion_steps_list = [20]
 guidance_weight_list = [0.5, 0.7, 1.5, 3.0]
 m_temp_list = [-1.0, 0.5]
-n_proc = 8
+n_proc = 16
 
 # Create a semaphore
 semaphore = Semaphore(n_proc)
@@ -37,7 +37,7 @@ def run_script(film, warm_starting, horizon, n_step, guidance_w, m_temp, gpu_id)
         subprocess.run(args, env=env)
 
 # Create a list of all combinations of n_step, horizon, and film
-params = list(product([True, False], [True, False], horizon_list, n_diffusion_steps_list, guidance_weight_list, m_temp_list))
+params = list(product([True, False], [True], horizon_list, n_diffusion_steps_list, guidance_weight_list, m_temp_list))
 
 # Start all processes, alternating between the two GPUs
 for i, p in enumerate(params):

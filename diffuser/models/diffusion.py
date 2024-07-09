@@ -182,7 +182,7 @@ class GaussianDiffusion(nn.Module):
 
         end_T = self.n_timesteps
         if sample_kwargs["warm_starting"]:
-            end_T = self.n_timesteps//4
+            end_T = self.n_timesteps//2
         progress = utils.Progress(end_T) if verbose else utils.Silent()
         for i in reversed(range(0, end_T)):
             t = make_timesteps(batch_size, i, device)

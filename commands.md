@@ -13,10 +13,6 @@ python scripts/train.py --dataset walker2d-medium-v2 --logbase logs/cond_a_film
 python scripts/train_mult.py
 
 # Evaluate the model
-python scripts/plan_guided_parallel.py --dataset walker2d-medium-v2 --logbase logs/cond_a_nofilm
-
-python scripts/eval_mult_weights.py
-
-python scripts/train_eval_mult.py
+python scripts/plan_guided_parallel.py --dataset walker2d-medium-v2 --logbase logs/cond_a_film
 
 python scripts/eval_mult.py

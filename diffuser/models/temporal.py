@@ -125,7 +125,7 @@ class TemporalUnet(nn.Module):
         dim=128,
         dim_mults=(1, 2, 4, 8),
         returns_condition=False,
-        condition_dropout=0.1,
+        condition_dropout=0.25,
         calc_energy=False,
         kernel_size=5,
         film=False,
