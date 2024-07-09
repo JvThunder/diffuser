@@ -12,14 +12,15 @@ import numpy as np
 class Parser(utils.Parser):
     dataset: str = 'walker2d-medium-replay-v2'
     config: str = 'config.locomotion'
-    guidance_weight: float = 1.2
-    horizon: int = 32
+    guidance_weight: float = 0.5
+    horizon: int = 4
     m_temp: float = -1.0
     n_diffusion_steps: int = 20
     film: bool = False
+    warm_starting: bool = False
 
 args = Parser().parse_args('plan')
-args.diffusion_loadpath = f'diffusion/defaults_H{args.horizon}_T{args.n_diffusion_steps}_d{args.discount}'
+args.diffusion_loadpath = f'diffusion/defaults_H{args.horizon}_T{args.n_diffusion_steps}'
 
 #-----------------------------------------------------------------------------#
 #---------------------------------- loading ----------------------------------#
@@ -79,7 +80,7 @@ rollouts = [[obs_list[i].copy()] for i in range(num_envs)]
 for t in range(args.max_episode_length):
     ## format current observation for conditioning
     conditions = observation
-    action, samples = policy(conditions, verbose=args.verbose)
+    action, samples = policy(conditions, verbose=args.verbose, warm_starting=args.warm_starting)
 
     next_obs_list = []
     for i in range(num_envs):

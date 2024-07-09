@@ -167,18 +167,24 @@ class GaussianDiffusion(nn.Module):
         return model_mean, posterior_variance, posterior_log_variance
 
     @torch.no_grad()
-    def p_sample_loop(self, shape, cond, cond_reward, verbose=True, return_chain=False, sample_fn=default_sample_fn, **sample_kwargs):
+    def p_sample_loop(self, shape, cond, cond_reward, prv_action, verbose=True, return_chain=False, sample_fn=default_sample_fn, **sample_kwargs):
         device = self.betas.device
 
         batch_size = shape[0]
-        x = torch.randn(shape, device=device)
-        # x = apply_conditioning(x, cond, self.action_dim)
+        if sample_kwargs["warm_starting"]:
+            x = torch.randn(shape, device=device)
+        else:
+            x = prv_action
+        assert x.shape == shape
 
         chain = [x] if return_chain else None
         cond_reward = torch.full((batch_size,1), cond_reward[0][0], device=device, dtype=torch.float32)
 
-        progress = utils.Progress(self.n_timesteps) if verbose else utils.Silent()
-        for i in reversed(range(0, self.n_timesteps)):
+        end_T = self.n_timesteps
+        if sample_kwargs["warm_starting"]:
+            end_T = self.n_timesteps//4
+        progress = utils.Progress(end_T) if verbose else utils.Silent()
+        for i in reversed(range(0, end_T)):
             t = make_timesteps(batch_size, i, device)
             x, values = sample_fn(self, x, cond, cond_reward, t)
             # x = apply_conditioning(x, cond, self.action_dim)
@@ -194,7 +200,7 @@ class GaussianDiffusion(nn.Module):
         return Sample(x, values, chain)
 
     @torch.no_grad()
-    def conditional_sample(self, cond, cond_reward, horizon=None, **sample_kwargs):
+    def conditional_sample(self, cond, cond_reward, prv_action, horizon=None, **sample_kwargs):
         '''
             conditions : [ (time, state), ... ]
         '''
@@ -203,7 +209,7 @@ class GaussianDiffusion(nn.Module):
         horizon = horizon or self.horizon
         shape = (batch_size, horizon, self.transition_dim)
 
-        return self.p_sample_loop(shape, cond, cond_reward, **sample_kwargs)
+        return self.p_sample_loop(shape, cond, cond_reward, prv_action, **sample_kwargs)
 
     #------------------------------------------ training ------------------------------------------#
 
@@ -235,5 +241,5 @@ class GaussianDiffusion(nn.Module):
         t = torch.randint(0, self.n_timesteps, (batch_size,), device=x.device).long()
         return self.p_losses(x, *args, t)
 
-    def forward(self, cond, cond_reward, *args, **kwargs):
-        return self.conditional_sample(cond, cond_reward, *args, **kwargs)
+    def forward(self, cond, cond_reward, prv_action, *args, **kwargs):
+        return self.conditional_sample(cond, cond_reward, prv_action, *args, **kwargs)

@@ -34,22 +34,26 @@ class GuidedPolicy:
         self.w_i = self.w_i.reshape(1, -1, 1)
         
 
-    def __call__(self, conditions, verbose=True):
-        batch_size = conditions[0].shape[0]
-
-        # conditions = {k: self.preprocess_fn(v) for k, v in conditions.items()}
-        conditions = self._format_conditions(conditions, batch_size)
+    def __call__(self, conditions, verbose=True, warm_starting=True):
+        batch_size = conditions.shape[0]
+        conditions = self._format_conditions(conditions)
 
         cond_reward = 1
         cond_reward = torch.tensor(cond_reward, device=self.device, dtype=torch.float32)
         cond_reward = cond_reward.view(-1, 1)
 
-        ## run reverse diffusion process
-        samples = self.diffusion_model(conditions, cond_reward, guide=None, verbose=verbose, **self.sample_kwargs)
+        # make prv_action with [ batch_size x horizon x transition_dim ]
+        prv_action = torch.zeros(batch_size, self.horizon, self.action_dim, device=self.device, dtype=torch.float32)
+        if len(self.buffers) > 0:
+            prv_action = self.buffers[0][:, 1:, :]
+            prv_action = torch.tensor(prv_action, device=self.device, dtype=torch.float32)
+            prv_action = torch.cat([prv_action, torch.randn(batch_size, 1, self.action_dim, device=self.device, dtype=torch.float32)], dim=1)
+
+        self.sample_kwargs['warm_starting'] = warm_starting
+        samples = self.diffusion_model(conditions, cond_reward, prv_action, guide=None, verbose=verbose, **self.sample_kwargs)
         trajectories = utils.to_np(samples.trajectories)
 
         ## extract action [ batch_size x horizon x transition_dim ]
-
         # last dim: [self.action_dim, self.observation_dim, self.action_dim, ... self.observation_dim] 
         actions = trajectories[:, :, :self.action_dim]
         # clip to [-3, 3]
@@ -58,8 +62,8 @@ class GuidedPolicy:
         # action: [batch_size x horizon x action_dim]
 
         ## temporal ensemble
+        self.buffers.appendleft(actions)
         if self.m > 0:
-            self.buffers.appendleft(actions)
             action_list = []
             for i in range(len(self.buffers)):
                 action_list.append(self.buffers[i][::, i])
@@ -81,7 +85,7 @@ class GuidedPolicy:
         parameters = list(self.diffusion_model.parameters())
         return parameters[0].device
 
-    def _format_conditions(self, conditions, batch_size):
+    def _format_conditions(self, conditions):
         # conditions = utils.apply_dict(
         #     self.normalizer.normalize,
         #     conditions,

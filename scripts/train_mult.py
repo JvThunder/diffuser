@@ -6,11 +6,11 @@ from itertools import product
 config_path = 'config/locomotion.py'
 
 # Define the dataset & logbase dir
-dataset = 'halfcheetah-medium-replay-v2'
+dataset = 'walker2d-medium-v2'
 logbase = 'logs/cond_a'
 
 # Define the training hyperparams
-horizon_list = [4, 8]
+horizon_list = [16, 32]
 n_diffusion_steps_list = [20]
 n_proc = 4
 

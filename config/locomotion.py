@@ -13,6 +13,7 @@ args_to_watch = [
     ('n_diffusion_steps', 'T'),
     ('guidance_weight', 'w'),
     ('m_temp', 'm'),
+    ('warm_starting', 'ws')
 ]
 
 logbase = 'logs'
