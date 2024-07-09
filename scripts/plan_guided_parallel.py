@@ -10,12 +10,18 @@ import numpy as np
 #-----------------------------------------------------------------------------#
 
 class Parser(utils.Parser):
-    dataset: str = 'walker2d-medium-replay-v2'
     config: str = 'config.locomotion'
-    guidance_weight: float = 4.0
+    dataset: str = 'hopper-medium-expert-v2'
+    guidance_weight: float = 0.5
+    horizon: int = 16
+    m_temp: float = -1.0
+    n_diffusion_steps: int = 20
+    film: bool = False
+    warm_starting: bool = False
+    render: bool = False
 
 args = Parser().parse_args('plan')
-print("Using w:", args.guidance_weight)
+args.diffusion_loadpath = f'diffusion/defaults_H{args.horizon}_T{args.n_diffusion_steps}'
 
 #-----------------------------------------------------------------------------#
 #---------------------------------- loading ----------------------------------#
@@ -51,12 +57,10 @@ policy_config = utils.Config(
     preprocess_fns=args.preprocess_fns,
     verbose=False,
     guidance_weight=args.guidance_weight,
-    ## sampling kwargs
-    # scale=args.scale,
-    # sample_fn=sampling.n_step_guided_p_sample,
-    # n_guide_steps=args.n_guide_steps,
-    # t_stopgrad=args.t_stopgrad,
-    # scale_grad_by_std=args.scale_grad_by_std,
+
+    horizon=args.horizon,
+    m=args.m_temp,
+    
 )
 
 logger = logger_config()
@@ -77,7 +81,7 @@ rollouts = [[obs_list[i].copy()] for i in range(num_envs)]
 for t in range(args.max_episode_length):
     ## format current observation for conditioning
     conditions = observation
-    action, samples = policy(conditions, verbose=args.verbose)
+    action, samples = policy(conditions, verbose=args.verbose, warm_starting=args.warm_starting)
 
     next_obs_list = []
     for i in range(num_envs):
@@ -103,11 +107,10 @@ for t in range(args.max_episode_length):
             flush=True,
         )
 
-        ## update rollout observations
-        rollouts.append(next_observation.copy())
-
-        ## render every `args.vis_freq` steps
-        # logger.log(i, t, samples, state, rollouts[i])
+        ## render rollout thus far
+        if args.render:
+            if not dones[i]: rollouts[i].append(next_observation.copy())
+            if i < 5: logger.log(i, t, samples, state, rollouts[i])
 
     next_observation = np.stack(next_obs_list, axis=0)
     observation = next_observation

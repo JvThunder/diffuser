@@ -8,6 +8,9 @@ import diffuser.utils as utils
 class Parser(utils.Parser):
     dataset: str = 'hopper-medium-expert-v2'
     config: str = 'config.locomotion'
+    horizon: int = 32
+    n_diffusion_steps: int = 20
+    film: bool = False
 
 args = Parser().parse_args('diffusion')
 
@@ -54,6 +57,7 @@ model_config = utils.Config(
     dim_mults=args.dim_mults,
     device=args.device,
     returns_condition=True,
+    film=args.film,
 )
 
 diffusion_config = utils.Config(
@@ -66,7 +70,6 @@ diffusion_config = utils.Config(
     loss_type=args.loss_type,
     clip_denoised=args.clip_denoised,
     predict_epsilon=args.predict_epsilon,
-    p_uncond=args.p_uncond,
     ## loss weighting
     action_weight=args.action_weight,
     loss_weights=args.loss_weights,

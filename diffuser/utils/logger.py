@@ -19,18 +19,18 @@ class Logger:
             os.makedirs(os.path.join(self.savepath, str(idx)))
 
         ## render image of plans
-        self.renderer.composite(
-            os.path.join(self.savepath, str(idx), f'{t}.png'),
-            samples.observations[idx:idx+1],
-        )
+        # self.renderer.composite(
+        #     os.path.join(self.savepath, str(idx), f'{t}.png'),
+        #     samples.observations[idx:idx+1],
+        # )
 
         ## render video of plans
-        self.renderer.render_plan(
-            os.path.join(self.savepath, str(idx), f'{t}_plan.mp4'),
-            samples.actions[idx:idx+1,:self.max_render],
-            samples.observations[idx:idx+1, :self.max_render],
-            state,
-        )
+        # self.renderer.render_plan(
+        #     os.path.join(self.savepath, str(idx), f'{t}_plan.mp4'),
+        #     samples.actions[idx:idx+1,:self.max_render],
+        #     samples.observations[idx:idx+1, :self.max_render],
+        #     state,
+        # )
 
         if rollout is not None:
             ## render video of rollout thus far

@@ -11,15 +11,14 @@ args_to_watch = [
     ('prefix', ''),
     ('horizon', 'H'),
     ('n_diffusion_steps', 'T'),
-    ## value kwargs
-    ('discount', 'd'),
     ('guidance_weight', 'w'),
+    ('m_temp', 'm'),
+    ('warm_starting', 'ws')
 ]
 
 logbase = 'logs'
 
-h = 32
-n_steps = 20
+# n_steps = 20
 d = 0.99
 
 base = {
@@ -27,8 +26,8 @@ base = {
         ## model
         'model': 'models.TemporalUnet',
         'diffusion': 'models.GaussianDiffusion',
-        'horizon': h,
-        'n_diffusion_steps': n_steps,
+        # 'horizon': h,
+        # 'n_diffusion_steps': n_steps,
         'action_weight': 10,
         'loss_weights': None,
         'loss_discount': 1,
@@ -36,7 +35,6 @@ base = {
         'dim_mults': (1, 2, 4, 8),
         'renderer': 'utils.MuJoCoRenderer',
         'discount': d,
-        'p_uncond': 0.5,
 
         ## dataset
         # 'loader': 'datasets.SequenceDataset',
@@ -95,14 +93,14 @@ base = {
         'max_render': 8,
 
         ## diffusion model
-        'horizon': h,
-        'n_diffusion_steps': n_steps,
+        # 'horizon': h,
+        # 'n_diffusion_steps': n_steps,
 
         ## value function
         'discount': d,
 
         ## loading
-        'diffusion_loadpath': 'f:diffusion/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
+        # 'diffusion_loadpath': 'f:diffusion/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
         # 'value_loadpath': 'f:values/defaults_H{horizon}_T{n_diffusion_steps}_d{discount}',
 
         'diffusion_epoch': 'latest',
@@ -126,7 +124,7 @@ hopper_medium_expert_v2 = {
 
 halfcheetah_medium_replay_v2 = halfcheetah_medium_v2 = halfcheetah_medium_expert_v2 = {
     'diffusion': {
-        'horizon': 4,
+        # 'horizon': 4,
         'dim_mults': (1, 4, 8),
         'attention': True,
     },
@@ -135,7 +133,7 @@ halfcheetah_medium_replay_v2 = halfcheetah_medium_v2 = halfcheetah_medium_expert
         'dim_mults': (1, 4, 8),
     },
     'plan': {
-        'horizon': 4,
+        # 'horizon': 4,
         'scale': 0.001,
         't_stopgrad': 4,
     },
