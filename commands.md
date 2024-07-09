@@ -8,11 +8,11 @@ docker run -it --rm --gpus all \
     diffuser /bin/bash -c "cd /home/code && /bin/bash"
 
 # Train the model
-python scripts/train.py --dataset walker2d-medium-v2 --logbase logs/cond_a_film
+python scripts/train.py --dataset walker2d-medium-v2 --logbase logs/av_cond_film --film
 
 python scripts/train_mult.py
 
 # Evaluate the model
-python scripts/plan_guided_parallel.py --dataset walker2d-medium-v2 --logbase logs/cond_a_film
+python scripts/plan_guided_parallel.py --dataset walker2d-medium-v2 --logbase logs/cond_a_nofilm
 
 python scripts/eval_mult.py

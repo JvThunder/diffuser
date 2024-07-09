@@ -7,7 +7,7 @@ config_path = 'config/locomotion.py'
 
 # Define the dataset & logbase dir
 dataset = 'walker2d-medium-v2'
-logbase = 'logs/cond_a'
+logbase = 'logs/av_cond'
 
 # Define the training hyperparams
 horizon_list = [16, 32]
