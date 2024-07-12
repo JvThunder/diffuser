@@ -16,3 +16,7 @@ python scripts/train_mult.py
 python scripts/plan_guided_parallel.py --dataset walker2d-medium-v2 --logbase logs/cond_a_nofilm
 
 python scripts/eval_mult.py
+
+python scripts/plan_guided_parallel.py --dataset walker2d-medium-v2 --logbase logs/av_cond_nofilm --render
+
+python scripts/train_mult.py && python scripts/eval_mult.py

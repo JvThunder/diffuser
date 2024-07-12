@@ -148,7 +148,7 @@ class ValueDataset(SequenceDataset):
         batch = super().__getitem__(idx)
         path_ind, start, end = self.indices[idx]
         
-        rewards = self.fields['rewards'][path_ind, start:end]
+        rewards = self.fields['rewards'][path_ind, start:]
         discounts = self.discounts[:len(rewards)]
         value = (discounts * rewards).sum()
         if self.normed:

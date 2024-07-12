@@ -27,9 +27,9 @@ class GuidedPolicy:
         self.discount = discount
         self.horizon = horizon
         self.buffers = deque(maxlen=4) # buffer for storing actions
-        self.cond_reward = 0.8
-        self.cycle = 100
-        self.count = 0
+        # self.cond_reward = 0.8
+        # self.cycle = 100
+        # self.count = 0
 
         # temporal ensemble
         self.m = m
@@ -41,11 +41,11 @@ class GuidedPolicy:
         batch_size = conditions.shape[0]
         conditions = self._format_conditions(conditions)
 
-        self.count += 1
-        if self.count % self.cycle == 0:
-            self.cond_reward -= 1 / 40
-        print(f'cond_reward: {self.cond_reward}')
-        cond_reward = self.cond_reward
+        # self.count += 1
+        # if self.count % self.cycle == 0:
+        #     self.cond_reward -= 1 / 40
+        # print(f'cond_reward: {self.cond_reward}')
+        cond_reward = 1
         cond_reward = torch.tensor(cond_reward, device=self.device, dtype=torch.float32)
         cond_reward = cond_reward.view(-1, 1)
 
