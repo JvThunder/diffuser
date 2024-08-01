@@ -6,7 +6,7 @@ import diffuser.utils as utils
 #-----------------------------------------------------------------------------#
 
 class Parser(utils.Parser):
-    dataset: str = 'hopper-medium-expert-v2'
+    dataset: str = 'hopper-expert-v2'
     config: str = 'config.locomotion'
     horizon: int = 32
     n_diffusion_steps: int = 20

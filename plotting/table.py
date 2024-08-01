@@ -11,6 +11,7 @@ ALGORITHM_STRINGS = {
 }
 
 BUFFER_STRINGS = {
+	'expert': 'Expert',
 	'medium-expert': 'Medium-Expert',
 	'medium': 'Medium',
 	'medium-replay': 'Medium-Replay',
@@ -164,7 +165,7 @@ def format_table(algorithms, buffers, environments):
 
 
 algorithms =['BC', 'CQL',  'IQL', 'DT', 'TT', 'MOPO', 'MOReL', 'MBOP', 'Diffuser']
-buffers = ['medium-expert', 'medium', 'medium-replay']
+buffers = ['expert', 'medium-expert', 'medium', 'medium-replay']
 environments = ['halfcheetah', 'hopper', 'walker2d']
 
 table = format_table(algorithms, buffers, environments)

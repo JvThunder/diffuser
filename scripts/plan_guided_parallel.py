@@ -14,7 +14,7 @@ class Parser(utils.Parser):
     dataset: str = 'hopper-medium-expert-v2'
     guidance_weight: float = 0.6
     horizon: int = 32
-    m_temp: float = 0.5
+    m_temp: float = -1.0
     n_diffusion_steps: int = 20
     film: bool = False
     warm_starting: bool = False
