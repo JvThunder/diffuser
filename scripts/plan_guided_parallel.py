@@ -12,8 +12,8 @@ import numpy as np
 class Parser(utils.Parser):
     config: str = 'config.locomotion'
     dataset: str = 'hopper-medium-expert-v2'
-    guidance_weight: float = 0.5
-    horizon: int = 16
+    guidance_weight: float = 0.6
+    horizon: int = 32
     m_temp: float = -1.0
     n_diffusion_steps: int = 20
     film: bool = False
